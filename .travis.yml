@@ -7,8 +7,14 @@ install:
   - pip install docopt
   - pip install future
   - pip install psutil
-script:
-  - oracle-java8-set-default
-  - python main.py doctor --verbose
-  - oracle-java9-set-default
-  - python main.py doctor --verbose
+jdk:
+  - oraclejdk8
+  - oraclejdk9
+matrix:
+  include:
+    - script:
+      - oracle-java8-set-default
+      - python main.py doctor --verbose
+    - script:
+      - oracle-java9-set-default
+      - python main.py doctor --verbose
