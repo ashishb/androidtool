@@ -5,6 +5,7 @@ from future.standard_library import install_aliases
 
 install_aliases()
 
+import platform
 import psutil
 import re
 import signal
@@ -29,6 +30,8 @@ except ImportError:
 _JAVA_VERSION_FOR_ANDROID = '1.8'
 _JAVA8_INSTALL_COMMAND_FOR_MAC = 'brew cask install caskroom/versions/java8'
 _SET_JAVA8_AS_DEFAULT_ON_MAC = 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)'
+_GET_ALL_JAVA_VERSIONS_ON_MAC = '/usr/libexec/java_home -V'
+_GET_ALL_JAVA_VERSIONS_ON_LINUX = 'update-alternatives --display java'
 
 
 class AndroidEnhanced(object):
@@ -69,9 +72,20 @@ class AndroidEnhanced(object):
 
     @staticmethod
     def _get_all_java_versions() -> [str]:
-        stdout, stderr = AndroidEnhanced._execute_cmd('/usr/libexec/java_home -V')
-        java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
-        versions = re.findall(java_version_regex, stderr)
+        if AndroidEnhanced._on_linux():
+            stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
+            java_version_regex = 'java-([0-9]+.*?)/'
+        elif AndroidEnhanced._on_mac():
+            java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
+            stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
+        else:
+            return []
+        output = ''
+        output += stdout
+        output += stderr
+        versions = re.findall(java_version_regex, output)
+        versions = set(versions)
+        print_verbose('Versions are %s' % versions)
         return versions
 
     @staticmethod
@@ -89,3 +103,11 @@ class AndroidEnhanced(object):
         print_verbose(stdout)
         print_verbose(stderr)
         return stdout, stderr
+
+    @staticmethod
+    def _on_linux():
+        return platform.system() == 'Linux'
+
+    @staticmethod
+    def _on_mac():
+        return platform.system() == 'Darwin'

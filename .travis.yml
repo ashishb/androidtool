@@ -1,6 +1,6 @@
 # https://stackoverflow.com/questions/27644586/how-to-set-up-travis-ci-with-multiple-languages
 language: python
-sudo: false
+sudo: required
 python:
   - 3.6
 install:
@@ -13,8 +13,8 @@ jdk:
 matrix:
   include:
     - script:
-      - oracle-java8-set-default
-      - python main.py doctor --verbose
+        - jdk_switcher use oraclejdk8
+        - python main.py doctor --verbose
     - script:
-      - oracle-java9-set-default
-      - python main.py doctor --verbose
+        - jdk_switcher use oraclejdk9
+        - bash ./test_doctor_failure.sh
