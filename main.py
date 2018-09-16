@@ -1,21 +1,14 @@
 #!/usr/local/bin/python3
 # Python 2 and 3, print compatibility
 from __future__ import print_function
+
 # Without this urllib.parse which is python 3 only cannot be accessed in python 2.
 from future.standard_library import install_aliases
+
 install_aliases()
 
-
-import psutil
-import re
-import signal
-import subprocess
 import sys
-import tempfile
-import time
 import os
-import random
-from urllib.parse import urlparse
 import docopt
 
 
@@ -30,30 +23,30 @@ except ImportError:
     import output_helper
 
 
-USAGE_STRING = """
+_VERSION_FILE_NAME = 'version.txt'
+_USAGE_STRING = """
 A better version of the command-line android tool with a more intuitive command-line interface.
 
 Usage:
-    main.py doctor
+    android_enhanced.py [options] doctor
 
 Options:
-    -v, --verbose           Verbose mode
+    -v, --verbose       Verbose mode
     
 """
 
 
+
 def main():
-    args = docopt.docopt(USAGE_STRING, version=get_version())
-    # output_helper.set_verbose(args['--verbose'])
+    args = docopt.docopt(_USAGE_STRING, version=get_version())
+    verbose_mode = args['--verbose']
+    output_helper.set_verbose(verbose_mode)
     androide = android_enhanced.AndroidEnhanced()
 
     if args['doctor']:
         androide.run_doctor()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
-
-
-_VERSION_FILE_NAME = 'version.txt'
 
 
 def get_version():

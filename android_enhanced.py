@@ -86,4 +86,6 @@ class AndroidEnhanced(object):
             line = line.decode('utf-8').strip()
             stderr += (line + '\n')
 
+        print_verbose(stdout)
+        print_verbose(stderr)
         return stdout, stderr
