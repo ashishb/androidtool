@@ -7,7 +7,8 @@ install:
   - pip install docopt
   - pip install future
   - pip install psutil
-before_install:
-  - jdk_switcher use oraclejdk8
 script:
+  - jdk_switcher use oraclejdk8
+  - python main.py doctor
+  - jdk_switcher use oraclejdk9
   - python main.py doctor
