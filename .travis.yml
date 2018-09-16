@@ -1,0 +1,11 @@
+# https://stackoverflow.com/questions/27644586/how-to-set-up-travis-ci-with-multiple-languages
+language: python
+sudo: false
+python:
+  - 3.6
+install:
+  - pip install docopt
+  - pip install future
+  - pip install psutil
+script:
+  - python main.py doctor
