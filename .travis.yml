@@ -9,6 +9,6 @@ install:
   - pip install psutil
 script:
   - jdk_switcher use oraclejdk8
-  - python main.py doctor
+  - python main.py doctor --verbose
   - jdk_switcher use oraclejdk9
-  - python main.py doctor
+  - python main.py doctor --verbose
