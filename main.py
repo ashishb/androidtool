@@ -29,6 +29,9 @@ A better version of the command-line android tool with a more intuitive command-
 
 Usage:
     android_enhanced.py [options] doctor
+    android_enhanced.py [options] list versions
+    android_enhanced.py [options] list others
+    android_enhanced.py [options] install version [android-api-version]
 
 Options:
     -v, --verbose       Verbose mode
@@ -36,9 +39,8 @@ Options:
 """
 
 
-
 def main():
-    args = docopt.docopt(_USAGE_STRING, version=get_version())
+    args = docopt.docopt(_USAGE_STRING, version=_get_version())
     verbose_mode = args['--verbose']
     output_helper.set_verbose(verbose_mode)
     androide = android_enhanced.AndroidEnhanced()
@@ -49,7 +51,7 @@ def main():
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
 
-def get_version():
+def _get_version():
     dir_of_this_script = os.path.split(__file__)[0]
     version_file_path = os.path.join(dir_of_this_script, _VERSION_FILE_NAME)
     with open(version_file_path, 'r') as fh:
