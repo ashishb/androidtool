@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -eou pipefail
+set -eoxu pipefail
+
+# JDK switcher is available on Travis CI and not on Circle CI.
 
 # Assert success on JDK8
 jdk_switcher use oraclejdk8
