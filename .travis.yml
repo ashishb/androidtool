@@ -14,7 +14,7 @@ matrix:
   include:
     - script:
         - jdk_switcher use oraclejdk8
-        - python main.py doctor --verbose
+        - python src/main.py doctor --verbose
     - script:
         - jdk_switcher use oraclejdk9
-        - bash ./test_doctor_failure.sh
+        - bash ./tests/test_doctor_failure.sh
