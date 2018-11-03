@@ -5,7 +5,6 @@ python:
   - 3.6
 install:
   - pip install docopt
-  - pip install future
   - pip install psutil
 jdk:
   - oraclejdk8
@@ -13,8 +12,4 @@ jdk:
 matrix:
   include:
     - script:
-        - jdk_switcher use oraclejdk8
-        - python src/main.py doctor --verbose
-    - script:
-        - jdk_switcher use oraclejdk9
-        - bash ./tests/test_doctor_failure.sh
+        - bash ./tests/test_doctor.sh
