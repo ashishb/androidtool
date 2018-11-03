@@ -1,16 +1,16 @@
 #!/usr/local/bin/python3
-# Python 2 and 3, print compatibility
-from __future__ import print_function
-
-# Without this urllib.parse which is python 3 only cannot be accessed in python 2.
-from future.standard_library import install_aliases
-
-install_aliases()
 
 import sys
 import os
 import docopt
 
+
+def _using_python2():
+    return sys.version_info < (3, 0)
+
+
+# This code does not support Python 2
+assert not _using_python2(), 'You are using Python 2 which is not supported. Use Python 3.'
 
 try:
     # This fails when the code is executed directly and not as a part of python package installation,
