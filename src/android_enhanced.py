@@ -1,10 +1,3 @@
-# Python 2 and 3, print compatibility
-from __future__ import print_function
-# Without this urllib.parse which is python 3 only cannot be accessed in python 2.
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import platform
 import psutil
 import re
@@ -39,7 +32,7 @@ class AndroidEnhanced(object):
     def __init__(self) -> None:
         pass
 
-    def run_doctor(self):
+    def run_doctor(self) -> None:
         default_java_version = AndroidEnhanced._get_default_java_version()
         if default_java_version is None:
             print_error_and_exit('Java is not installed. Install Java for Android via %s' %
@@ -60,6 +53,38 @@ class AndroidEnhanced(object):
                     _SET_JAVA8_AS_DEFAULT_ON_MAC))
         else:
             print_message('Correct Java version %s is installed' % default_java_version)
+
+    def list_packages(self, arch=None, api_type=None) -> None:
+        print_verbose('List packages(arch: %s, api_type: %s)' % (arch, api_type))
+        if api_type is None:
+            google_api_type = '.*?'
+        else:
+            google_api_type = 'api_type'
+
+        if arch is None:
+            arch_pattern = '.*?'
+        else:
+            arch_pattern = arch + '.*?'
+        image_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
+        stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        system_images = re.findall(image_pattern, stdout)
+        arch_to_android_version_map = {}
+        for system_image in system_images:
+            android_api_version = system_image[0]
+            google_api_type = system_image[1]
+            arch = system_image[2]
+            if google_api_type not in arch_to_android_version_map:
+                arch_to_android_version_map[google_api_type] = {}
+            if arch not in arch_to_android_version_map[google_api_type]:
+                arch_to_android_version_map[google_api_type][arch] = []
+            arch_to_android_version_map[google_api_type][arch].append(android_api_version)
+
+        for (google_api_type, archictures) in arch_to_android_version_map.items():
+            print('Google API type: %s' % google_api_type)
+            for arch in archictures:
+                android_api_versions = arch_to_android_version_map[google_api_type][arch]
+                print('%s -> %s' % (arch, ', '.join(android_api_versions)))
+            print()
 
     @staticmethod
     def _get_default_java_version() -> str:

@@ -1,16 +1,16 @@
 #!/usr/local/bin/python3
-# Python 2 and 3, print compatibility
-from __future__ import print_function
-
-# Without this urllib.parse which is python 3 only cannot be accessed in python 2.
-from future.standard_library import install_aliases
-
-install_aliases()
 
 import sys
 import os
 import docopt
 
+
+def _using_python2():
+    return sys.version_info < (3, 0)
+
+
+# This code does not support Python 2
+assert not _using_python2(), 'You are using Python 2 which is not supported. Use Python 3.'
 
 try:
     # This fails when the code is executed directly and not as a part of python package installation,
@@ -29,13 +29,12 @@ A better version of the command-line android tool with a more intuitive command-
 
 Usage:
     android_enhanced.py [options] doctor
-    android_enhanced.py [options] list versions
+    android_enhanced.py [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list versions
     android_enhanced.py [options] list others
     android_enhanced.py [options] install version [android-api-version]
 
 Options:
     -v, --verbose       Verbose mode
-    
 """
 
 
@@ -47,6 +46,26 @@ def main():
 
     if args['doctor']:
         androide.run_doctor()
+    elif args['list'] and args['versions']:
+        if args['--x86']:
+            arch = 'x86'
+        elif args['--arm']:
+            arch = 'arm'
+        elif args['--x86_64']:
+            arch = 'x86_64'
+        else:
+            arch = None  # default
+
+        api_type = None  # default
+        if args['--no-google-apis']:
+            api_type = 'default'
+        elif args['--google-apis']:
+            api_type = 'google_apis'
+        elif args['--android-tv']:
+            api_type = 'android-tv'
+        elif args['--android-wear']:
+            api_type = 'android-wear'
+        androide.list_packages(arch, api_type)
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
