@@ -28,10 +28,10 @@ _USAGE_STRING = """
 A better version of the command-line android tool with a more intuitive command-line interface.
 
 Usage:
-    android_enhanced.py [options] doctor
-    android_enhanced.py [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list versions
-    android_enhanced.py [options] list others
-    android_enhanced.py [options] install version [android-api-version]
+    androide [options] doctor
+    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list versions
+    androide [options] list others
+    androide [options] install version [android-api-version]
 
 Options:
     -v, --verbose       Verbose mode
