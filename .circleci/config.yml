@@ -54,6 +54,8 @@ jobs:
             python3 src/main.py doctor --verbose
             python3 src/main.py list api versions --arm
             python3 src/main.py list build tools
+            python3 src/main.py list others
+            python3 src/main.py update all --verbose
 
   build-jdk9:
     docker:
@@ -104,6 +106,7 @@ jobs:
             else
               exit 0  # This command failure is expected
             fi
+
 
 # https://discuss.circleci.com/t/how-to-test-multiple-versions-by-triggering-jobs-with-a-shell-function/11305
 workflows:

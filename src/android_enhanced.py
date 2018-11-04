@@ -27,6 +27,9 @@ _SET_JAVA8_AS_DEFAULT_ON_MAC = 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8
 _GET_ALL_JAVA_VERSIONS_ON_MAC = '/usr/libexec/java_home -V'
 _GET_ALL_JAVA_VERSIONS_ON_LINUX = 'update-alternatives --display java'
 
+_BUILD_TOOLS_REGEX = 'build-tools.*'
+_SYSTEM_IMAGES_REGEX = 'system-images;android-([0-9]+);(.*);(.*)\n'
+
 
 class AndroidEnhanced(object):
 
@@ -50,8 +53,8 @@ class AndroidEnhanced(object):
                 print_error_and_exit('Java version is %s, Android needs Java %s.\n'
                                      'On Mac install it with "%s"\nAnd then set default version'
                                      'via "%s"' % (
-                    default_java_version, _JAVA_VERSION_FOR_ANDROID,_JAVA8_INSTALL_COMMAND_FOR_MAC,
-                    _SET_JAVA8_AS_DEFAULT_ON_MAC))
+                                      default_java_version, _JAVA_VERSION_FOR_ANDROID,
+                                      _JAVA8_INSTALL_COMMAND_FOR_MAC, _SET_JAVA8_AS_DEFAULT_ON_MAC))
         else:
             print_message('Correct Java version %s is installed' % default_java_version)
 
@@ -67,7 +70,7 @@ class AndroidEnhanced(object):
         else:
             arch_pattern = arch + '.*?'
         regex_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
-        stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         system_images = re.findall(regex_pattern, stdout)
         arch_to_android_version_map = {}
         for system_image in system_images:
@@ -80,23 +83,88 @@ class AndroidEnhanced(object):
                 arch_to_android_version_map[google_api_type][arch] = []
             arch_to_android_version_map[google_api_type][arch].append(android_api_version)
 
-        for (google_api_type, archictures) in arch_to_android_version_map.items():
+        for (google_api_type, architectures) in arch_to_android_version_map.items():
             print('Google API type: %s' % google_api_type)
-            for arch in archictures:
+            for arch in architectures:
                 android_api_versions = arch_to_android_version_map[google_api_type][arch]
                 print('%s -> %s' % (arch, ', '.join(android_api_versions)))
             print()
 
     def list_build_tools(self):
-        regex_pattern = 'build-tools.*'
-        stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
-        build_tools = re.findall(regex_pattern, stdout)
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
         for build_tool in build_tools:
             print(build_tool)
 
+    def list_others(self):
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        if return_code != 0:
+            print_error_and_exit('Failed to list packages')
+
+        print('Installed Packages:')
+        lines = stdout.split('\n')
+        for i in range(0, len(lines)):
+            line = lines[i].strip()
+            previous_line = None
+            if i > 0:
+                previous_line = lines[i - 1].strip()
+
+            if not previous_line or previous_line.startswith('---'):
+                is_package_name = True
+            else:
+                is_package_name = False
+
+            if not is_package_name:
+                continue
+
+            print_verbose('Line is \"%s\" and previous line is \"%s\"' % (line, previous_line))
+
+            if not line:
+                continue
+            elif line.startswith('system-images;') or line.startswith('platforms;') or line.startswith('sources;'):
+                continue
+            elif line.startswith('platform-tools'):
+                continue
+            elif line.startswith('build-tools;'):
+                continue
+            elif line.find('Info:') != -1:
+                continue
+
+            if line.endswith(':'):
+                print('')
+            print(line)
+
+    def update_all(self):
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
+        if return_code != 0:
+            print_error_and_exit('Failed to update, return code: %d' % return_code)
+        count = 0
+        if stdout:
+            for line in stdout.split('\r'):
+                if line.find('Fetch remote repository'):
+                    continue
+                else:
+                    count += 1
+        if count == 0:
+            print_message('No packages to update')
+            self._accept_all_licenses()
+        else:
+            print_message(stdout)
+
+    def _accept_all_licenses(self):
+        return_code, stdout, stderr = self._execute_cmd('yes | sdkmanager --licenses')
+        if return_code != 0:
+            print_error_and_exit('Failed to accept licenses, return code: %d' % return_code)
+        license_regex = '([0-9]*) of ([0-9]*) SDK package licenses not accepted'
+        result = re.search(license_regex, stdout)
+        if result is None:
+            print_message('All licenses accepted')
+        else:
+            print_message('%d of %d licenses accepted' % (int(result.group(1)), int(result.group(2))))
+
     @staticmethod
     def _get_default_java_version() -> Optional[str]:
-        stdout, stderr = AndroidEnhanced._execute_cmd('java -version')
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('java -version')
         java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
         version = re.search(java_version_regex, stderr)
         if version is None:
@@ -107,11 +175,11 @@ class AndroidEnhanced(object):
     @staticmethod
     def _get_all_java_versions() -> [str]:
         if AndroidEnhanced._on_linux():
-            stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
+            return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
             java_version_regex = 'java-([0-9]+.*?)/'
         elif AndroidEnhanced._on_mac():
             java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
-            stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
+            return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
         else:
             return []
         output = ''
@@ -123,20 +191,23 @@ class AndroidEnhanced(object):
         return versions
 
     @staticmethod
-    def _execute_cmd(cmd) -> (str, str):
-        ps1 = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    def _execute_cmd(cmd) -> (int, str, str):
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout = ''
         stderr = ''
-        for line in ps1.stdout:
+        for line in process.stdout:
             line = line.decode('utf-8').strip()
             stdout += (line + '\n')
-        for line in ps1.stderr:
+        for line in process.stderr:
             line = line.decode('utf-8').strip()
             stderr += (line + '\n')
 
+        process.communicate()
+        print_verbose('\nStdout')
         print_verbose(stdout)
+        print_verbose('\nStderr')
         print_verbose(stderr)
-        return stdout, stderr
+        return process.returncode, stdout, stderr
 
     @staticmethod
     def _on_linux():

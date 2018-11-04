@@ -33,6 +33,7 @@ Usage:
     androide [options] list build tools
     androide [options] list others
     androide [options] install version <android-api-version>
+    androide [options] update all
 
 Options:
     -v, --verbose       Verbose mode
@@ -69,6 +70,10 @@ def main():
         androide.list_packages(arch, api_type)
     elif args['list'] and args['build'] and args['tools']:
         androide.list_build_tools()
+    elif args['list'] and args['others']:
+        androide.list_others()
+    elif args['update']:
+        androide.update_all()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
