@@ -28,10 +28,11 @@ _USAGE_STRING = """
 A better version of the command-line android tool with a more intuitive command-line interface.
 
 Usage:
-    android_enhanced.py [options] doctor
-    android_enhanced.py [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list versions
-    android_enhanced.py [options] list others
-    android_enhanced.py [options] install version [android-api-version]
+    androide [options] doctor
+    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
+    androide [options] list build tools
+    androide [options] list others
+    androide [options] install version <android-api-version>
 
 Options:
     -v, --verbose       Verbose mode
@@ -46,7 +47,7 @@ def main():
 
     if args['doctor']:
         androide.run_doctor()
-    elif args['list'] and args['versions']:
+    elif args['list'] and args['api'] and args['versions']:
         if args['--x86']:
             arch = 'x86'
         elif args['--arm']:
@@ -66,6 +67,8 @@ def main():
         elif args['--android-wear']:
             api_type = 'android-wear'
         androide.list_packages(arch, api_type)
+    elif args['list'] and args['build'] and args['tools']:
+        androide.list_build_tools()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 

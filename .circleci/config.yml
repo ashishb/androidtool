@@ -51,7 +51,9 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             # Verify doctor succeeds
-            python src/main.py doctor --verbose
+            python3 src/main.py doctor --verbose
+            python3 src/main.py list api versions --arm
+            python3 src/main.py list build tools
 
   build-jdk9:
     docker:
