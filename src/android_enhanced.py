@@ -93,7 +93,8 @@ class AndroidEnhanced(object):
         version = re.search(java_version_regex, stderr)
         if version is None:
             return None
-        return version[1]
+        print_verbose('version object is %s' % version)
+        return version.group(1)
 
     @staticmethod
     def _get_all_java_versions() -> [str]:
