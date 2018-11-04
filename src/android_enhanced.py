@@ -65,9 +65,9 @@ class AndroidEnhanced(object):
             arch_pattern = '.*?'
         else:
             arch_pattern = arch + '.*?'
-        image_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
+        regex_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
         stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
-        system_images = re.findall(image_pattern, stdout)
+        system_images = re.findall(regex_pattern, stdout)
         arch_to_android_version_map = {}
         for system_image in system_images:
             android_api_version = system_image[0]
@@ -86,8 +86,15 @@ class AndroidEnhanced(object):
                 print('%s -> %s' % (arch, ', '.join(android_api_versions)))
             print()
 
+    def list_build_tools(self):
+        regex_pattern = 'build-tools.*'
+        stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        build_tools = re.findall(regex_pattern, stdout)
+        for build_tool in build_tools:
+            print(build_tool)
+
     @staticmethod
-    def _get_default_java_version() -> str:
+    def _get_default_java_version() -> Optional[str]:
         stdout, stderr = AndroidEnhanced._execute_cmd('java -version')
         java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
         version = re.search(java_version_regex, stderr)
