@@ -9,6 +9,7 @@ import time
 import os
 import random
 from urllib.parse import urlparse
+from typing import Optional
 import docopt
 
 try:
