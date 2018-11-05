@@ -26,7 +26,8 @@ SRC_FILES=$(echo -n ${DIR}/../src/{main.py,output_helper.py,android_enhanced.py,
   # Create the package. Reference: https://packaging.python.org/tutorials/packaging-projects/
   python3 setup.py sdist bdist_wheel &&
   # Commit to git before sending package upstream
-  git commit -m "Setup release $(cat $VERSION_FILENAME)" &&
+  git add ${DIR}/../src/version.txt &&
+  git commit -m "Setup release $(cat ${VERSION_FILENAME})" &&
   git tag $(cat $VERSION_FILENAME) &&
   git push origin master &&
   git push origin master --tags &&
