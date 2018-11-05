@@ -13,9 +13,6 @@ jobs:
       - image: circleci/android:api-28-alpha
         environment:
           JVM_OPTS: -Xmx3200m
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.7.0
 
     working_directory: ~/android-sdk-enhanced-code-checkout-directory
 
