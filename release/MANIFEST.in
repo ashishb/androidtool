@@ -1,4 +1,4 @@
-androide/main.py
-androide/android_enhanced.py
-androide/output_helper.py
-androide/version.txt
+include androide/main.py
+include androide/android_enhanced.py
+include androide/output_helper.py
+include androide/version.txt

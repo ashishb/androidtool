@@ -1,1 +1,1 @@
-from .androide import main
+from androide import main
