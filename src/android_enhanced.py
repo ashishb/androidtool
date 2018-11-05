@@ -296,11 +296,15 @@ class AndroidEnhanced(object):
             'emulator',
             'tools',
             'platform-tools',
-            'extras;intel;Hardware_Accelerated_Execution_Manager',
             'extras;android;m2repository',
             'extras;google;m2repository',
             'patcher;v4',
         ]
+        # HAXM is not required on Linux. It is required on Windows and OSX.
+        # I am assuming that this tool will never run on anything except Windows and OSX.
+        # I don't know whether HAXM is required on BSD or not.
+        if not AndroidEnhanced._on_linux():
+            packages_to_install.append('extras;intel;Hardware_Accelerated_Execution_Manager')
         return packages_to_install
 
     @staticmethod
