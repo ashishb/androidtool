@@ -27,7 +27,7 @@ _SET_JAVA8_AS_DEFAULT_ON_MAC = 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8
 _GET_ALL_JAVA_VERSIONS_ON_MAC = '/usr/libexec/java_home -V'
 _GET_ALL_JAVA_VERSIONS_ON_LINUX = 'update-alternatives --display java'
 
-_BUILD_TOOLS_REGEX = 'build-tools.*'
+_BUILD_TOOLS_REGEX = 'build-tools;.*'
 _SYSTEM_IMAGES_REGEX = 'system-images;android-([0-9]+);(.*);(.*)\n'
 
 
