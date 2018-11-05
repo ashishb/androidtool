@@ -29,10 +29,11 @@ A better version of the command-line android tool with a more intuitive command-
 
 Usage:
     androide [options] doctor
-    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
     androide [options] list build tools
     androide [options] list others
-    androide [options] install version <android-api-version>
+    androide [options] list installed packages
+    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
+    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
     androide [options] update all
 
 Options:
@@ -49,33 +50,52 @@ def main():
     if args['doctor']:
         androide.run_doctor()
     elif args['list'] and args['api'] and args['versions']:
-        if args['--x86']:
-            arch = 'x86'
-        elif args['--arm']:
-            arch = 'arm'
-        elif args['--x86_64']:
-            arch = 'x86_64'
-        else:
-            arch = None  # default
-
-        api_type = None  # default
-        if args['--no-google-apis']:
-            api_type = 'default'
-        elif args['--google-apis']:
-            api_type = 'google_apis'
-        elif args['--android-tv']:
-            api_type = 'android-tv'
-        elif args['--android-wear']:
-            api_type = 'android-wear'
+        arch = get_architecture(args)
+        api_type = get_api_type(args)
         androide.list_packages(arch, api_type)
+    elif args['install'] and args['version']:
+        arch = get_architecture(args)
+        api_type = get_api_type(args)
+        if api_type is None:
+            api_type = 'default'
+        if arch is None:
+            arch = 'x86'
+        version = args['<android-api-version>']
+        androide.install_api_version(version, arch, api_type)
     elif args['list'] and args['build'] and args['tools']:
         androide.list_build_tools()
     elif args['list'] and args['others']:
         androide.list_others()
+    elif args['list'] and args['installed'] and args['packages']:
+        androide.list_installed_packages()
     elif args['update']:
         androide.update_all()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
+
+
+def get_api_type(args):
+    api_type = None  # default
+    if args['--no-google-apis']:
+        api_type = 'default'
+    elif args['--google-apis']:
+        api_type = 'google_apis'
+    elif args['--android-tv']:
+        api_type = 'android-tv'
+    elif args['--android-wear']:
+        api_type = 'android-wear'
+    return api_type
+
+
+def get_architecture(args):
+    arch = None  # default
+    if args['--x86']:
+        arch = 'x86'
+    elif args['--arm']:
+        arch = 'armeabi-v7a'
+    elif args['--x86_64']:
+        arch = 'x86_64'
+    return arch
 
 
 def _get_version():

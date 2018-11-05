@@ -90,6 +90,60 @@ class AndroidEnhanced(object):
                 print('%s -> %s' % (arch, ', '.join(android_api_versions)))
             print()
 
+    def list_installed_packages(self):
+        # Don't pass --include_obsolete here since that seems to list all installed packages under obsolete
+        # packages section as well.
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list')
+        start_line = 'Installed packages:'.lower()
+        end_line = 'Available Packages:'.lower()
+
+        lines = stdout.split('\n')
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            if line.lower().find(start_line) != -1:
+                i += 1
+                break
+            else:
+                i += 1
+
+        installed_packages = list()
+        for j in range(i, len(lines)):
+            line = lines[j]
+            if line.lower().find(end_line) != -1:
+                break
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith('----'):
+                continue
+            if line.startswith('Description:'):
+                continue
+            if line.startswith('Version:'):
+                continue
+            if line.startswith('Installed Location:'):
+                continue
+            installed_packages.append(line)
+
+        installed_packages = sorted(installed_packages)
+        print('\n'.join(installed_packages))
+
+    def install_api_version(self,version, arch=None, api_type=None) -> None:
+        platform_package = self._get_platform_package(version)
+        sources_package = self._get_sources_package(version)
+        addons_package = self._get_add_ons_package(version, api_type)
+        system_images_package = self._get_system_images_package(version, arch, api_type)
+
+        self._install_sdk_package(platform_package)
+        if sources_package:
+            self._install_sdk_package(sources_package)
+        if addons_package:
+            self._install_sdk_package(addons_package)
+        if system_images_package:
+            self._install_sdk_package(system_images_package)
+
     def list_build_tools(self):
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
@@ -151,8 +205,9 @@ class AndroidEnhanced(object):
         else:
             print_message(stdout)
 
-    def _accept_all_licenses(self):
-        return_code, stdout, stderr = self._execute_cmd('yes | sdkmanager --licenses')
+    @staticmethod
+    def _accept_all_licenses():
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('yes | sdkmanager --licenses')
         if return_code != 0:
             print_error_and_exit('Failed to accept licenses, return code: %d' % return_code)
         license_regex = '([0-9]*) of ([0-9]*) SDK package licenses not accepted'
@@ -189,6 +244,65 @@ class AndroidEnhanced(object):
         versions = set(versions)
         print_verbose('Versions are %s' % versions)
         return versions
+
+    @staticmethod
+    def _get_platform_package(version) -> str:
+        return 'platforms;android-%s' % version
+
+    @staticmethod
+    def _get_sources_package(version) -> Optional[str]:
+        try:
+            version = int(version)
+            if version < 14:
+                print_error('Sources are not available before API 14')
+                return None
+        except ValueError:
+            pass
+
+        return 'sources;android-%s' % version
+
+    @staticmethod
+    def _get_add_ons_package(version, api_type) -> Optional[str]:
+        if api_type == 'google_apis':
+            return 'add-ons;addon-google_apis-google-%s' % version
+        # Note: There are two more packages types, GDK for Glass and Google TV which is deprecated.
+        # No point, supporting them here.
+        # add-ons;addon-google_gdk-google-19
+        # add-ons;addon-google_tv_addon-google-12
+        # add-ons;addon-google_tv_addon-google-13
+        return None
+
+    @staticmethod
+    def _get_system_images_package(version, arch, api_type) -> Optional[str]:
+        try:
+            version = int(version)
+            if version < 10:
+                print_verbose('System images are bundled in the platform below API 10')
+                return None
+            # API 24 onwards, for x86, prefer to install google_apis_playstore image
+            # then google_apis image. It seems that's a better image.
+            if version >= 24 and api_type == 'google_apis' and arch == 'x86':
+                api_type = 'google_apis_playstore'
+                return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
+        except ValueError:
+            pass
+        return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
+
+    def _install_sdk_package(self, package_name):
+        exists = self._does_package_exist(package_name)
+        if not exists:
+            print_message('Package \"%s\" not found' % package_name)
+            return
+
+        print_message('Installing package \"%s\"...' % package_name)
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --install \"%s\"' % package_name)
+        if return_code != 0:
+            print_error('Failed to install package \"%s\"' % package_name)
+            print_error('Stderr is \n%s' % stderr)
+
+    # TODO(ashishb): Implement this in the future to check whether a package is available or not.
+    def _does_package_exist(self, package_name):
+        return True
 
     @staticmethod
     def _execute_cmd(cmd) -> (int, str, str):
