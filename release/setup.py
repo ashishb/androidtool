@@ -35,7 +35,7 @@ setup(name='android-sdk-enhanced',
         entry_points={
                 # -*- Entry points: -*-
                 'console_scripts': [
-                        'androide=androide.main:main',
+                        'androidtool=androide.main:main',
                         ],
                 }
         )

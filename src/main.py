@@ -28,13 +28,13 @@ _USAGE_STRING = """
 A better version of the command-line android tool with a more intuitive command-line interface.
 
 Usage:
-    androide [options] doctor
-    androide [options] list build tools
-    androide [options] list others
-    androide [options] list installed packages
-    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
-    androide [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
-    androide [options] update all
+    androidtool [options] doctor
+    androidtool [options] list build tools
+    androidtool [options] list others
+    androidtool [options] list installed packages
+    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
+    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
+    androidtool [options] update all
 
 Options:
     -v, --verbose       Verbose mode
