@@ -40,7 +40,8 @@ class AndroidEnhanced(object):
         print_message('Checking java version...')
         self._ensure_correct_java_version()
         print_message('Checking that basic Android packages are installed...')
-        self._ensure_basic_packages_are_installed()
+        if not self._ensure_basic_packages_are_installed():
+            print_error_and_exit('Not all basic packages are installed')
     
     @staticmethod
     def _ensure_basic_packages_are_installed() -> bool:
