@@ -37,26 +37,26 @@ class AndroidEnhanced(object):
         pass
 
     def run_doctor(self) -> None:
-        default_java_version = AndroidEnhanced._get_default_java_version()
-        if default_java_version is None:
-            print_error_and_exit('Java is not installed. Install Java for Android via %s' %
-                                 _JAVA8_INSTALL_COMMAND_FOR_MAC)
-        if default_java_version != _JAVA_VERSION_FOR_ANDROID:
-            all_java_versions = AndroidEnhanced._get_all_java_versions()
-            if _JAVA_VERSION_FOR_ANDROID in all_java_versions:
-                print_error_and_exit('Java version %s is installed but default is set to Java %s.\n'
-                                     'Set the correct java version via "%s"' % (
-                                         _JAVA_VERSION_FOR_ANDROID,
-                                         default_java_version,
-                                         _SET_JAVA8_AS_DEFAULT_ON_MAC))
+        print_message('Checking java version...')
+        self._ensure_correct_java_version()
+        print_message('Checking that basic Android packages are installed...')
+        self._ensure_basic_packages_are_installed()
+    
+    @staticmethod
+    def _ensure_basic_packages_are_installed() -> bool:
+        success = True
+        installed_packages = AndroidEnhanced._get_installed_packages()
+        basic_packages = AndroidEnhanced._get_basic_packages()
+        n = len(basic_packages)
+        for i in range(0, n):
+            basic_package = basic_packages[i]
+            if basic_package not in installed_packages:
+                print_error('Basic packages \"%s\" is not installed' % basic_package)
+                success = False
             else:
-                print_error_and_exit('Java version is %s, Android needs Java %s.\n'
-                                     'On Mac install it with "%s"\nAnd then set default version'
-                                     'via "%s"' % (
-                                      default_java_version, _JAVA_VERSION_FOR_ANDROID,
-                                      _JAVA8_INSTALL_COMMAND_FOR_MAC, _SET_JAVA8_AS_DEFAULT_ON_MAC))
-        else:
-            print_message('Correct Java version %s is installed' % default_java_version)
+                print_message('Package %d/%d: \"%s\" is installed' % (i + 1, n, basic_package))
+
+        return success
 
     def list_packages(self, arch=None, api_type=None) -> None:
         print_verbose('List packages(arch: %s, api_type: %s)' % (arch, api_type))
@@ -91,43 +91,7 @@ class AndroidEnhanced(object):
             print()
 
     def list_installed_packages(self):
-        # Don't pass --include_obsolete here since that seems to list all installed packages under obsolete
-        # packages section as well.
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list')
-        start_line = 'Installed packages:'.lower()
-        end_line = 'Available Packages:'.lower()
-
-        lines = stdout.split('\n')
-
-        i = 0
-        while i < len(lines):
-            line = lines[i]
-            if line.lower().find(start_line) != -1:
-                i += 1
-                break
-            else:
-                i += 1
-
-        installed_packages = list()
-        for j in range(i, len(lines)):
-            line = lines[j]
-            if line.lower().find(end_line) != -1:
-                break
-            line = line.strip()
-            if not line:
-                continue
-
-            if line.startswith('----'):
-                continue
-            if line.startswith('Description:'):
-                continue
-            if line.startswith('Version:'):
-                continue
-            if line.startswith('Installed Location:'):
-                continue
-            installed_packages.append(line)
-
-        installed_packages = sorted(installed_packages)
+        installed_packages = self._get_installed_packages()
         print('\n'.join(installed_packages))
 
     def install_api_version(self,version, arch=None, api_type=None) -> None:
@@ -188,7 +152,7 @@ class AndroidEnhanced(object):
             print(line)
 
     def install_basic_packages(self):
-        packages_to_install = self._get_basic_packages_list()
+        packages_to_install = self._get_basic_packages()
 
         for package_name in packages_to_install:
             self._install_sdk_package(package_name)
@@ -209,6 +173,29 @@ class AndroidEnhanced(object):
             self._accept_all_licenses()
         else:
             print_message(stdout)
+
+    @staticmethod
+    def _ensure_correct_java_version():
+        default_java_version = AndroidEnhanced._get_default_java_version()
+        if default_java_version is None:
+            print_error_and_exit('Java is not installed. Install Java for Android via %s' %
+                                 _JAVA8_INSTALL_COMMAND_FOR_MAC)
+        if default_java_version != _JAVA_VERSION_FOR_ANDROID:
+            all_java_versions = AndroidEnhanced._get_all_java_versions()
+            if _JAVA_VERSION_FOR_ANDROID in all_java_versions:
+                print_error_and_exit('Java version %s is installed but default is set to Java %s.\n'
+                                     'Set the correct java version via "%s"' % (
+                                         _JAVA_VERSION_FOR_ANDROID,
+                                         default_java_version,
+                                         _SET_JAVA8_AS_DEFAULT_ON_MAC))
+            else:
+                print_error_and_exit('Java version is %s, Android needs Java %s.\n'
+                                     'On Mac install it with "%s"\nAnd then set default version'
+                                     'via "%s"' % (
+                                         default_java_version, _JAVA_VERSION_FOR_ANDROID,
+                                         _JAVA8_INSTALL_COMMAND_FOR_MAC, _SET_JAVA8_AS_DEFAULT_ON_MAC))
+        else:
+            print_message('Correct Java version %s is installed' % default_java_version)
 
     @staticmethod
     def _accept_all_licenses():
@@ -249,6 +236,43 @@ class AndroidEnhanced(object):
         versions = set(versions)
         print_verbose('Versions are %s' % versions)
         return versions
+    
+    @staticmethod
+    def _get_installed_packages() -> [str]:
+        # Don't pass --include_obsolete here since that seems to list all installed packages under obsolete
+        # packages section as well.
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list')
+        start_line = 'Installed packages:'.lower()
+        end_line = 'Available Packages:'.lower()
+        lines = stdout.split('\n')
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            if line.lower().find(start_line) != -1:
+                i += 1
+                break
+            else:
+                i += 1
+        installed_packages = list()
+        for j in range(i, len(lines)):
+            line = lines[j]
+            if line.lower().find(end_line) != -1:
+                break
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith('----'):
+                continue
+            if line.startswith('Description:'):
+                continue
+            if line.startswith('Version:'):
+                continue
+            if line.startswith('Installed Location:'):
+                continue
+            installed_packages.append(line)
+        installed_packages = sorted(installed_packages)
+        return installed_packages
 
     @staticmethod
     def _get_build_tools() -> [str]:
@@ -263,7 +287,7 @@ class AndroidEnhanced(object):
         return build_tools
 
     @staticmethod
-    def _get_basic_packages_list() -> [str]:
+    def _get_basic_packages() -> [str]:
         latest_build_package = AndroidEnhanced._get_build_tools()[-1]
         print_verbose('Latest build package is \"%s\"' % latest_build_package)
         packages_to_install = [
