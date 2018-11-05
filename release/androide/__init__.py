@@ -1,0 +1,1 @@
+from .androide import main

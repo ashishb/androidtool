@@ -107,4 +107,8 @@ venv.bak/
 
 
 release/README.md
-release/androide
+release/androide/main.py
+release/androide/output_helper.py
+release/androide/android_enhanced.py
+release/androide/version.txt
+
