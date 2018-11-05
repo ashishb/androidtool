@@ -147,6 +147,7 @@ class AndroidEnhanced(object):
     def list_build_tools(self):
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
+        build_tools = sorted(build_tools)
         for build_tool in build_tools:
             print(build_tool)
 
