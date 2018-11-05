@@ -145,9 +145,7 @@ class AndroidEnhanced(object):
             self._install_sdk_package(system_images_package)
 
     def list_build_tools(self):
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
-        build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
-        build_tools = sorted(build_tools)
+        build_tools = self._get_build_tools()
         for build_tool in build_tools:
             print(build_tool)
 
@@ -188,6 +186,12 @@ class AndroidEnhanced(object):
             if line.endswith(':'):
                 print('')
             print(line)
+
+    def install_basic_packages(self):
+        packages_to_install = self._get_basic_packages_list()
+
+        for package_name in packages_to_install:
+            self._install_sdk_package(package_name)
 
     def update_all(self):
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
@@ -247,6 +251,34 @@ class AndroidEnhanced(object):
         return versions
 
     @staticmethod
+    def _get_build_tools() -> [str]:
+        """
+        :return: List of build tools packages, sorted by version number, latest package comes last
+        """
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        if return_code != 0:
+            print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s', (stdout, stderr))
+        build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
+        build_tools = sorted(build_tools)
+        return build_tools
+
+    @staticmethod
+    def _get_basic_packages_list() -> [str]:
+        latest_build_package = AndroidEnhanced._get_build_tools()[-1]
+        print_verbose('Latest build package is \"%s\"' % latest_build_package)
+        packages_to_install = [
+            latest_build_package,
+            'emulator',
+            'tools',
+            'platform-tools',
+            'extras;intel;Hardware_Accelerated_Execution_Manager',
+            'extras;android;m2repository',
+            'extras;google;m2repository',
+            'patcher;v4',
+        ]
+        return packages_to_install
+
+    @staticmethod
     def _get_platform_package(version) -> str:
         return 'platforms;android-%s' % version
 
@@ -289,7 +321,7 @@ class AndroidEnhanced(object):
             pass
         return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
 
-    def _install_sdk_package(self, package_name):
+    def _install_sdk_package(self, package_name) -> bool:
         exists = self._does_package_exist(package_name)
         if not exists:
             print_message('Package \"%s\" not found' % package_name)
@@ -300,6 +332,9 @@ class AndroidEnhanced(object):
         if return_code != 0:
             print_error('Failed to install package \"%s\"' % package_name)
             print_error('Stderr is \n%s' % stderr)
+            return False
+        return True
+
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     def _does_package_exist(self, package_name):

@@ -15,7 +15,7 @@ A better version of the command-line android tool with a more intuitive command-
     androidtool [options] list installed packages
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
-    androidtool [options] install basic tools
+    androidtool [options] install basic packages
     androidtool [options] list others
     androidtool [options] update all
 
@@ -29,6 +29,6 @@ A better version of the command-line android tool with a more intuitive command-
     list build tools - lists available build tools
     list api versions - lists different SDK versions available to install
     list installed packages - lists installed packages
-    install basic tools - installs a basic set of tools. Highly recommended to run it the first time.
+    install basic packages - installs a basic set of packages. Highly recommended to run it the first time.
     install version - installs a particular API version
     update all - updates all installed packages to the latest versions.

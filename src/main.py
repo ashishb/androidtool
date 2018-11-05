@@ -30,14 +30,41 @@ A better version of the command-line android tool with a more intuitive command-
 Usage:
     androidtool [options] doctor
     androidtool [options] list build tools
-    androidtool [options] list others
     androidtool [options] list installed packages
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
+    androidtool [options] install basic packages
+    androidtool [options] list others
     androidtool [options] update all
 
 Options:
     -v, --verbose       Verbose mode
+    
+    
+Command description:
+    doctor - ensures that you have right version of Java. In the future, it will check Android SDK installation as well.
+    list build tools - lists available build tools
+    list api versions - lists different SDK versions available to install
+    list installed packages - lists installed packages
+    install basic tools - installs a basic set of tools. Highly recommended to run it the first time.
+    install version - installs a particular API version
+    update all - updates all installed packages to the latest versions.
+"""
+
+
+"""
+TODO
+
+Create AVD
+`avdmanager --verbose create avd --name test_avd1 --package 'system-images;android-28;google_apis_playstore;x86_64'`
+
+Verify AVD creation
+`avdmanager --verbose list avd`
+
+Start AVD
+`/usr/local/Caskroom/android-sdk/4333796/emulator/emulator -avd test_avd1 -no-boot-anim -verbose`
+
+
 """
 
 
@@ -68,8 +95,10 @@ def main():
         androide.list_others()
     elif args['list'] and args['installed'] and args['packages']:
         androide.list_installed_packages()
-    elif args['update']:
+    elif args['update'] and args['all']:
         androide.update_all()
+    elif args['install'] and args['basic'] and args['packages']:
+        androide.install_basic_packages()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
