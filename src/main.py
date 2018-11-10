@@ -42,11 +42,13 @@ Options:
     -v, --verbose       Verbose mode
     
     
-Command description:
+Sub-command description:
     doctor - ensures that you have right version of Java. In the future, it will check Android SDK installation as well.
     list build tools - lists available build tools
     list api versions - lists different SDK versions available to install
+    list other packages - lists packages apart from build tools and api versions
     list installed packages - lists installed packages
+    list avds - lists setup AVDs
     install basic tools - installs a basic set of tools. Highly recommended to run it the first time.
     install version - installs a particular API version
     update all - updates all installed packages to the latest versions.

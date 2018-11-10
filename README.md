@@ -9,14 +9,17 @@ Note: Python 2 install is not supported
 
 A better version of the command-line android tool with a more intuitive command-line interface.
 
+
+
 ### Usage
     androidtool [options] doctor
     androidtool [options] list build tools
     androidtool [options] list installed packages
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
-    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
+    androidtool [options] list other packages
+    androidtool [options] list avds
     androidtool [options] install basic packages
-    androidtool [options] list others
+    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
     androidtool [options] update all
 
 ### Options
@@ -24,11 +27,12 @@ A better version of the command-line android tool with a more intuitive command-
 
 
 ### Sub-command description
-
     doctor - ensures that you have right version of Java. In the future, it will check Android SDK installation as well.
     list build tools - lists available build tools
     list api versions - lists different SDK versions available to install
+    list other packages - lists packages apart from build tools and api versions
     list installed packages - lists installed packages
-    install basic packages - installs a basic set of packages. Highly recommended to run it the first time.
+    list avds - lists setup AVDs
+    install basic tools - installs a basic set of tools. Highly recommended to run it the first time.
     install version - installs a particular API version
     update all - updates all installed packages to the latest versions.
