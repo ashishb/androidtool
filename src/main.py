@@ -32,9 +32,10 @@ Usage:
     androidtool [options] list build tools
     androidtool [options] list installed packages
     androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
-    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
+    androidtool [options] list other packages
+    androidtool [options] list avds
     androidtool [options] install basic packages
-    androidtool [options] list others
+    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
     androidtool [options] update all
 
 Options:
@@ -91,7 +92,7 @@ def main():
         androide.install_api_version(version, arch, api_type)
     elif args['list'] and args['build'] and args['tools']:
         androide.list_build_tools()
-    elif args['list'] and args['others']:
+    elif args['list'] and args['other'] and args['packages']:
         androide.list_others()
     elif args['list'] and args['installed'] and args['packages']:
         androide.list_installed_packages()
@@ -99,6 +100,8 @@ def main():
         androide.update_all()
     elif args['install'] and args['basic'] and args['packages']:
         androide.install_basic_packages()
+    elif args['list'] and args['avds']:
+        androide.list_avds()
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 

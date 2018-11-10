@@ -1,16 +1,7 @@
 import platform
-import psutil
 import re
-import signal
 import subprocess
-import sys
-import tempfile
-import time
-import os
-import random
-from urllib.parse import urlparse
 from typing import Optional
-import docopt
 
 try:
     # This fails when the code is executed directly and not as a part of python package installation,
@@ -94,6 +85,10 @@ class AndroidEnhanced(object):
     def list_installed_packages(self):
         installed_packages = self._get_installed_packages()
         print('\n'.join(installed_packages))
+
+    def list_avds(self):
+        return_code, stdout, stderr = self._execute_cmd('avdmanager --verbose list avd')
+        print(stdout)
 
     def install_api_version(self,version, arch=None, api_type=None) -> None:
         platform_package = self._get_platform_package(version)
@@ -371,6 +366,7 @@ class AndroidEnhanced(object):
 
     @staticmethod
     def _execute_cmd(cmd) -> (int, str, str):
+        print_verbose('Executing command: %s' % cmd)
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout = ''
         stderr = ''
