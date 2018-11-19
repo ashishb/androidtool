@@ -277,7 +277,7 @@ class AndroidEnhanced(object):
         """
         return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         if return_code != 0:
-            print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s', (stdout, stderr))
+            print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s' % (stdout, stderr))
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
         build_tools = sorted(build_tools)
         return build_tools
