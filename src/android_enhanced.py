@@ -96,13 +96,15 @@ class AndroidEnhanced(object):
         addons_package = self._get_add_ons_package(version, api_type)
         system_images_package = self._get_system_images_package(version, arch, api_type)
 
-        self._install_sdk_package(platform_package)
+        package_list = list()
+        package_list.append(platform_package)
         if sources_package:
-            self._install_sdk_package(sources_package)
+            package_list.append(sources_package)
         if addons_package:
-            self._install_sdk_package(addons_package)
+            package_list.append(addons_package)
         if system_images_package:
-            self._install_sdk_package(system_images_package)
+            package_list.append(system_images_package)
+        self._install_sdk_packages(package_list)
 
     def list_build_tools(self):
         build_tools = self._get_build_tools()
@@ -149,9 +151,7 @@ class AndroidEnhanced(object):
 
     def install_basic_packages(self):
         packages_to_install = self._get_basic_packages()
-
-        for package_name in packages_to_install:
-            self._install_sdk_package(package_name)
+        self._install_sdk_packages(packages_to_install)
 
     def update_all(self):
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
@@ -284,7 +284,10 @@ class AndroidEnhanced(object):
 
     @staticmethod
     def _get_basic_packages() -> [str]:
-        latest_build_package = AndroidEnhanced._get_build_tools()[-1]
+        build_tools = AndroidEnhanced._get_build_tools()
+        if not build_tools:
+            print_error_and_exit('Build tools list is empty, this is unexpected')
+        latest_build_package = build_tools[-1]
         print_verbose('Latest build package is \"%s\"' % latest_build_package)
         packages_to_install = [
             latest_build_package,
@@ -346,19 +349,23 @@ class AndroidEnhanced(object):
         return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
 
     def _install_sdk_package(self, package_name) -> bool:
-        exists = self._does_package_exist(package_name)
-        if not exists:
-            print_message('Package \"%s\" not found' % package_name)
-            return
+        return self._install_sdk_package([package_name])
 
-        print_message('Installing package \"%s\"...' % package_name)
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --install \"%s\"' % package_name)
+    def _install_sdk_packages(self, package_names) -> bool:
+        for package_name in package_names:
+            exists = self._does_package_exist(package_name)
+            if not exists:
+                print_message('Package \"%s\" not found' % package_name)
+                return
+
+        print_message('Installing package [%s]...' % ', '.join(package_names))
+        package_names_str = '\"' + '\" \"'.join(package_names) + '\"'
+        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --install %s' % package_names_str)
         if return_code != 0:
-            print_error('Failed to install package \"%s\"' % package_name)
+            print_error('Failed to install packages \"%s\"' % ' '.join(package_names))
             print_error('Stderr is \n%s' % stderr)
             return False
         return True
-
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     def _does_package_exist(self, package_name):
@@ -368,20 +375,33 @@ class AndroidEnhanced(object):
     def _execute_cmd(cmd) -> (int, str, str):
         print_verbose('Executing command: %s' % cmd)
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         stdout = ''
         stderr = ''
-        for line in process.stdout:
-            line = line.decode('utf-8').strip()
-            stdout += (line + '\n')
-        for line in process.stderr:
-            line = line.decode('utf-8').strip()
-            stderr += (line + '\n')
 
-        process.communicate()
-        print_verbose('\nStdout')
-        print_verbose(stdout)
-        print_verbose('\nStderr')
-        print_verbose(stderr)
+        while process.poll() is None:
+            line1 = process.stdout.readline()
+            line1 = line1.decode('utf-8').strip()
+            line2 = process.stderr.readline()
+            line2 = line2.decode('utf-8').strip()
+            stdout += (line1 + '\n')
+            stderr += (line2 + '\n')
+            print_verbose(line1)
+            print_verbose(line2)
+
+        leftover_stdout, leftover_stderr = process.communicate()
+        leftover_stdout = leftover_stdout.decode('utf-8').strip()
+        leftover_stderr = leftover_stderr.decode('utf-8').strip()
+        for line in leftover_stdout.split('\n'):
+            line = line.strip()
+            print_verbose(line)
+            stdout += (line + '\n')
+
+        for line in leftover_stderr.split('\n'):
+            line = line.strip()
+            stderr += (line + '\n')
+            print_verbose(line)
+
         return process.returncode, stdout, stderr
 
     @staticmethod
