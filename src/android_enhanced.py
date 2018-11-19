@@ -18,7 +18,7 @@ _SET_JAVA8_AS_DEFAULT_ON_MAC = 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8
 _GET_ALL_JAVA_VERSIONS_ON_MAC = '/usr/libexec/java_home -V'
 _GET_ALL_JAVA_VERSIONS_ON_LINUX = 'update-alternatives --display java'
 
-_BUILD_TOOLS_REGEX = 'build-tools;.*'
+_BUILD_TOOLS_REGEX = 'build-tools;\S*'
 _SYSTEM_IMAGES_REGEX = 'system-images;android-([0-9]+);(.*);(.*)\n'
 
 
@@ -30,6 +30,8 @@ class AndroidEnhanced(object):
     def run_doctor(self) -> None:
         print_message('Checking java version...')
         self._ensure_correct_java_version()
+        print_message('Checking SDK manager is installed...')
+        self._ensure_sdkmanager_is_installed()
         print_message('Checking that basic Android packages are installed...')
         if not self._ensure_basic_packages_are_installed():
             print_error_and_exit('Not all basic packages are installed')
@@ -90,7 +92,7 @@ class AndroidEnhanced(object):
         return_code, stdout, stderr = self._execute_cmd('avdmanager --verbose list avd')
         print(stdout)
 
-    def install_api_version(self,version, arch=None, api_type=None) -> None:
+    def install_api_version(self, version, arch=None, api_type=None) -> None:
         platform_package = self._get_platform_package(version)
         sources_package = self._get_sources_package(version)
         addons_package = self._get_add_ons_package(version, api_type)
@@ -104,7 +106,8 @@ class AndroidEnhanced(object):
             package_list.append(addons_package)
         if system_images_package:
             package_list.append(system_images_package)
-        self._install_sdk_packages(package_list)
+        if not self._install_sdk_packages(package_list):
+            print_error_and_exit('Failed to install packages for api version: %s' % version)
 
     def list_build_tools(self):
         build_tools = self._get_build_tools()
@@ -151,7 +154,8 @@ class AndroidEnhanced(object):
 
     def install_basic_packages(self):
         packages_to_install = self._get_basic_packages()
-        self._install_sdk_packages(packages_to_install)
+        if not self._install_sdk_packages(packages_to_install):
+            print_error_and_exit('Failed to install basic packages')
 
     def update_all(self):
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
@@ -192,6 +196,14 @@ class AndroidEnhanced(object):
                                          _JAVA8_INSTALL_COMMAND_FOR_MAC, _SET_JAVA8_AS_DEFAULT_ON_MAC))
         else:
             print_message('Correct Java version %s is installed' % default_java_version)
+
+    @staticmethod
+    def _ensure_sdkmanager_is_installed():
+        # Only works on Mac and GNU/Linux
+        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
+            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v sdkmanager')
+            if return_code != 0:
+                print_error_and_exit('sdkamanger not found, is Android SDK installed? (return code: %d)' % return_code)
 
     @staticmethod
     def _accept_all_licenses():
@@ -280,6 +292,7 @@ class AndroidEnhanced(object):
             print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s' % (stdout, stderr))
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
         build_tools = sorted(build_tools)
+        print_verbose('Build tools are %s' % build_tools)
         return build_tools
 
     @staticmethod
@@ -348,9 +361,6 @@ class AndroidEnhanced(object):
             pass
         return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
 
-    def _install_sdk_package(self, package_name) -> bool:
-        return self._install_sdk_package([package_name])
-
     def _install_sdk_packages(self, package_names) -> bool:
         for package_name in package_names:
             exists = self._does_package_exist(package_name)
@@ -358,9 +368,9 @@ class AndroidEnhanced(object):
                 print_message('Package \"%s\" not found' % package_name)
                 return
 
-        print_message('Installing package [%s]...' % ', '.join(package_names))
+        print_message('Installing packages [%s]...' % ', '.join(package_names))
         package_names_str = '\"' + '\" \"'.join(package_names) + '\"'
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --install %s' % package_names_str)
+        return_code, stdout, stderr = self._execute_cmd('yes | sdkmanager --verbose %s' % package_names_str)
         if return_code != 0:
             print_error('Failed to install packages \"%s\"' % ' '.join(package_names))
             print_error('Stderr is \n%s' % stderr)
@@ -382,25 +392,30 @@ class AndroidEnhanced(object):
         while process.poll() is None:
             line1 = process.stdout.readline()
             line1 = line1.decode('utf-8').strip()
+            if line1:
+                stdout += (line1 + '\n')
+                print_verbose(line1)
+
             line2 = process.stderr.readline()
             line2 = line2.decode('utf-8').strip()
-            stdout += (line1 + '\n')
-            stderr += (line2 + '\n')
-            print_verbose(line1)
-            print_verbose(line2)
+            if line2:
+                stderr += (line2 + '\n')
+                print_verbose(line2)
 
         leftover_stdout, leftover_stderr = process.communicate()
         leftover_stdout = leftover_stdout.decode('utf-8').strip()
         leftover_stderr = leftover_stderr.decode('utf-8').strip()
         for line in leftover_stdout.split('\n'):
             line = line.strip()
-            print_verbose(line)
-            stdout += (line + '\n')
+            if line:
+                print_verbose(line)
+                stdout += (line + '\n')
 
         for line in leftover_stderr.split('\n'):
             line = line.strip()
-            stderr += (line + '\n')
-            print_verbose(line)
+            if line:
+                stderr += (line + '\n')
+                print_verbose(line)
 
         return process.returncode, stdout, stderr
 
