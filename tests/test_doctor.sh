@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+source /opt/jdk_switcher/jdk_switcher.sh
+
 set -eoxu pipefail
 
 # JDK switcher is available on Travis CI and not on Circle CI.
-
 # Assert success on JDK8
 jdk_switcher use oraclejdk8
 python src/main.py doctor --verbose
