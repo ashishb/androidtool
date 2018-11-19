@@ -31,11 +31,11 @@ Usage:
     androidtool [options] doctor
     androidtool [options] list build tools
     androidtool [options] list installed packages
-    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] list api versions
+    androidtool [options] list api versions [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] 
     androidtool [options] list other packages
     androidtool [options] list avds
     androidtool [options] install basic packages
-    androidtool [options] [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] install version <android-api-version>
+    androidtool [options] install version <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
     androidtool [options] update all
 
 Options:
