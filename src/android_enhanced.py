@@ -53,6 +53,7 @@ class AndroidEnhanced(object):
         return success
 
     def list_packages(self, arch=None, api_type=None) -> None:
+        AndroidEnhanced._print_location_of_android_sdk()
         print_verbose('List packages(arch: %s, api_type: %s)' % (arch, api_type))
         if api_type is None:
             google_api_type = '.*?'
@@ -85,14 +86,17 @@ class AndroidEnhanced(object):
             print()
 
     def list_installed_packages(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         installed_packages = self._get_installed_packages()
         print('\n'.join(installed_packages))
 
     def list_avds(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         return_code, stdout, stderr = self._execute_cmd('avdmanager --verbose list avd')
         print(stdout)
 
     def install_api_version(self, version, arch=None, api_type=None) -> None:
+        AndroidEnhanced._print_location_of_android_sdk()
         platform_package = self._get_platform_package(version)
         sources_package = self._get_sources_package(version)
         addons_package = self._get_add_ons_package(version, api_type)
@@ -110,11 +114,13 @@ class AndroidEnhanced(object):
             print_error_and_exit('Failed to install packages for api version: %s' % version)
 
     def list_build_tools(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         build_tools = self._get_build_tools()
         for build_tool in build_tools:
             print(build_tool)
 
     def list_others(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         if return_code != 0:
             print_error_and_exit('Failed to list packages')
@@ -153,11 +159,13 @@ class AndroidEnhanced(object):
             print(line)
 
     def install_basic_packages(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         packages_to_install = self._get_basic_packages()
         if not self._install_sdk_packages(packages_to_install):
             print_error_and_exit('Failed to install basic packages')
 
     def update_all(self):
+        AndroidEnhanced._print_location_of_android_sdk()
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
         if return_code != 0:
             print_error_and_exit('Failed to update, return code: %d' % return_code)
@@ -376,6 +384,25 @@ class AndroidEnhanced(object):
             print_error('Stderr is \n%s' % stderr)
             return False
         return True
+
+    @staticmethod
+    def _print_location_of_android_sdk():
+        android_sdk_location = AndroidEnhanced._get_location_of_android_sdk()
+        if android_sdk_location:
+            print_verbose('Location of Android SDK: %s' % android_sdk_location)
+
+    @staticmethod
+    def _get_location_of_android_sdk() -> Optional[str]:
+        process = subprocess.Popen(
+            'realpath $(dirname $(readlink $(command -v sdkmanager)))/../..',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            print_verbose('Android SDK not found, return code: %d' % process.returncode)
+            return None
+        return stdout.decode('utf-8').strip()
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     def _does_package_exist(self, package_name):
