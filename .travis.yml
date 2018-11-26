@@ -104,6 +104,22 @@ matrix:
         - python3 src/main.py install version 28 --x86_64 --google-apis -v
         - python3 src/main.py list installed packages | grep android-28
 
+#   TODO(ashishb): Make this work, for now, it just hangs.
+#   For example, https://travis-ci.org/ashishb/android-sdk-enhanced/jobs/459599488
+#  - name: Test update command
+#      language: android
+#      python:
+#      - 3.7
+#      sudo: required  # For pip installation, otherwise, pip install fails.
+#      jdk: oraclejdk8
+#      before_script:
+#      - sudo apt-get install python3-pip
+#      - pip3 install --user -r requirements.txt
+#      - jdk_switcher use oraclejdk8
+#      script:
+#      - python3 src/main.py list installed packages
+#      - touch ~/.android/repositories.cfg
+#      - python3 src/main.py update all --verbose
 
     - name: Test list avds command
       language: java
@@ -135,3 +151,109 @@ matrix:
         - touch $HOME/.android/repositories.cfg
         - export ANDROID_SDK_ROOT=$HOME/android-sdk
         - python3 src/main.py list avds --verbose
+
+    - name:  Test create AVD API 24 command on JDK8
+      language: java
+      python:
+        - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      cache:
+        directories:
+          # Android SDK
+          - $HOME/android-sdk-dl
+          - $HOME/android-sdk
+          # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+          - $HOME/.android/build-cache
+      before_script:
+        # Python
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+        - touch $HOME/.android/repositories.cfg
+        # Android
+        # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
+        # Latest version available here: https://developer.android.com/studio/#command-tools
+        - if test ! -e $HOME/android-sdk-dl/sdk-tools.zip ; then curl https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > $HOME/android-sdk-dl/sdk-tools.zip ; fi
+        - unzip -qq -n $HOME/android-sdk-dl/sdk-tools.zip -d $HOME/android-sdk
+        # Install or update Android SDK components (will not do anything if already up to date thanks to the cache mechanism)
+        - echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools' > /dev/null
+      script:
+        - set -e
+        - touch $HOME/.android/repositories.cfg
+        - export ANDROID_SDK_ROOT=$HOME/android-sdk
+        - python3 src/main.py create avd test_avd1 24 --arm --google-apis
+        - python3 src/main.py list installed packages
+        - python3 src/main.py list avds
+        - python3 src/main.py list avds | grep test_avd1
+
+    - name: Test create AVD API 28 command on JDK8
+      language: java
+      python:
+        - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      cache:
+        directories:
+          # Android SDK
+          - $HOME/android-sdk-dl
+          - $HOME/android-sdk
+          # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+          - $HOME/.android/build-cache
+      before_script:
+        # Python
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+        - touch $HOME/.android/repositories.cfg
+        # Android
+        # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
+        # Latest version available here: https://developer.android.com/studio/#command-tools
+        - if test ! -e $HOME/android-sdk-dl/sdk-tools.zip ; then curl https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > $HOME/android-sdk-dl/sdk-tools.zip ; fi
+        - unzip -qq -n $HOME/android-sdk-dl/sdk-tools.zip -d $HOME/android-sdk
+        # Install or update Android SDK components (will not do anything if already up to date thanks to the cache mechanism)
+        - echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools' > /dev/null
+      script:
+        - set -e
+        - touch $HOME/.android/repositories.cfg
+        - export ANDROID_SDK_ROOT=$HOME/android-sdk
+        - python3 src/main.py create avd test_avd2 28 --x86 --no-google-apis
+        - python3 src/main.py list installed packages
+        - python3 src/main.py list avds
+        - python3 src/main.py list avds | grep test_avd2
+
+    - name: Test create AVD API 25 command on JDK8
+      language: java
+      python:
+        - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      cache:
+        directories:
+        # Android SDK
+        - $HOME/android-sdk-dl
+        - $HOME/android-sdk
+        # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+        - $HOME/.android/build-cache
+      before_script:
+        # Python
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+        - touch $HOME/.android/repositories.cfg
+        # Android
+        # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
+        # Latest version available here: https://developer.android.com/studio/#command-tools
+        - if test ! -e $HOME/android-sdk-dl/sdk-tools.zip ; then curl https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > $HOME/android-sdk-dl/sdk-tools.zip ; fi
+        - unzip -qq -n $HOME/android-sdk-dl/sdk-tools.zip -d $HOME/android-sdk
+        # Install or update Android SDK components (will not do anything if already up to date thanks to the cache mechanism)
+        - echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools' > /dev/null
+      script:
+        - set -e
+        - touch $HOME/.android/repositories.cfg
+        - export ANDROID_SDK_ROOT=$HOME/android-sdk
+        - python3 src/main.py list avds --verbose
+        - python3 src/main.py create avd test_avd3 25
+        - python3 src/main.py list installed packages
+        - python3 src/main.py list avds
+        - python3 src/main.py list avds | grep test_avd3

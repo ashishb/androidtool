@@ -27,6 +27,7 @@ class AndroidEnhanced:
 
     def __init__(self) -> None:
         # Initialize to None
+        self._avd_manager = None
         self._sdk_manager = None
 
     def run_doctor(self) -> None:
@@ -99,7 +100,7 @@ class AndroidEnhanced:
             print_error('No installed packages found')
 
     def list_avds(self):
-        avd_manager = AndroidEnhanced._get_avd_manager_path()
+        avd_manager = self._get_avd_manager_path()
         if not avd_manager:
             print_error_and_exit('avdmanager not found')
         cmd = '%s --verbose list avd' % avd_manager
@@ -188,6 +189,28 @@ class AndroidEnhanced:
             self._accept_all_licenses()
         else:
             print_message(stdout)
+
+    def create_avd(self, avd_name, api_version, arch, api_type):
+        if api_type is None:
+            api_type = 'google_apis'  # Preferred
+        if arch is None:
+            if AndroidEnhanced._is_64bit_architecture():
+                arch = 'x86_64'
+            else:
+                arch = 'x86'
+        package_name = AndroidEnhanced._get_system_images_package(api_version, arch, api_type)
+        print_verbose('Package is %s' % package_name)
+        self.install_api_version(api_version, arch=arch, api_type=api_type)
+        # Say no to custom hardware profile.
+        print_message('Creating AVD "%s" of type "%s" ' % (avd_name, package_name))
+        create_cmd = 'echo no | %s --verbose create avd --name %s --package "%s"' % (
+            self._get_avd_manager_path(), avd_name, package_name)
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(create_cmd)
+        if return_code != 0:
+            print_error('Failed to create AVD')
+            print_error('stdout: %s' % stdout)
+            print_error_and_exit('stderr: %s' % stderr)
+        print_message('AVD \"%s\" created successfully' % avd_name)
 
     @staticmethod
     def _ensure_correct_java_version():
@@ -405,26 +428,52 @@ class AndroidEnhanced:
             return False
         return True
 
+    def _get_avd_manager_path(self) -> Optional[str]:
+        if not self._avd_manager:
+            self._avd_manager = AndroidEnhanced._get_avd_manager_path_uncached()
+            print_verbose('AVD manager is located at %s' % self._avd_manager)
+
+        # Return the cached value
+        return self._avd_manager
+
     @staticmethod
-    def _get_avd_manager_path() -> Optional[str]:
+    def _get_avd_manager_path_uncached() -> Optional[str]:
+        # Only works on Mac and GNU/Linux
+        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
+            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v avdmanager')
+            if return_code == 0:
+                return 'avdmanager'
+            else:
+                print_verbose('avdmanager not in path, checking for ANDROID_SDK_ROOT')
+
         sdk_location = AndroidEnhanced._get_location_of_android_sdk()
         if not sdk_location:
+            print_error('Unable to find Android SDK')
             return None
-        return os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
+
+        avd_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
+        if os.path.exists(avd_manager_path):
+            return avd_manager_path
+        else:
+            print_error_and_exit('avdmanager not found at \"%s\"' % avd_manager_path)
+            return None
 
     def _get_sdk_manager_path(self) -> Optional[str]:
+        if not self._sdk_manager:
+            self._sdk_manager = AndroidEnhanced._get_sdk_manager_path_uncached()
+            print_verbose('SDK manager is located at %s' % self._sdk_manager)
         # Return the cached value
-        if self._sdk_manager:
-            return self._sdk_manager
+        return self._sdk_manager
 
+    @staticmethod
+    def _get_sdk_manager_path_uncached() -> Optional[str]:
         # Only works on Mac and GNU/Linux
         if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
             return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v sdkmanager')
             if return_code == 0:
-                self._sdk_manager = 'sdkmanager'
-                return self._sdk_manager
+                return 'sdkmanager'
             else:
-                print_verbose('sdkamanger not in path, checking for ANDROID_SDK_ROOT')
+                print_verbose('sdkmanager not in path, checking for ANDROID_SDK_ROOT')
 
         sdk_location = AndroidEnhanced._get_location_of_android_sdk()
         if not sdk_location:
@@ -433,7 +482,6 @@ class AndroidEnhanced:
 
         sdk_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'sdkmanager')
         if os.path.exists(sdk_manager_path):
-            self._sdk_manager = sdk_manager_path
             return sdk_manager_path
         else:
             print_error_and_exit('sdkmanager not found at \"%s\"' % sdk_manager_path)
@@ -464,18 +512,13 @@ class AndroidEnhanced:
         stdout = ''
         stderr = ''
 
-        while process.poll() is None:
-            line1 = process.stdout.readline()
-            line1 = line1.decode('utf-8').strip()
-            if line1:
-                stdout += (line1 + '\n')
-                print_verbose(line1)
-
-            line2 = process.stderr.readline()
-            line2 = line2.decode('utf-8').strip()
-            if line2:
-                stderr += (line2 + '\n')
-                print_verbose(line2)
+        # Disabled for now, since we lose stdout data due to this indeterministically.
+        # while process.poll() is None:
+        #     line1 = process.stdout.readline()
+        #     line1 = line1.decode('utf-8').strip()
+        #     if line1:
+        #         stdout += (line1 + '\n')
+        #         print_verbose(line1)
 
         leftover_stdout, leftover_stderr = process.communicate()
         leftover_stdout = leftover_stdout.decode('utf-8').strip()

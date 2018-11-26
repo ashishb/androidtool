@@ -39,6 +39,8 @@ Usage:
     androidtool [options] install basic packages
     androidtool [options] install version <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
     androidtool [options] update all
+    androidtool [options] create avd <avd-name> <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
+    androidtool [options] start avd <avd-name>
 
 Options:
     -v, --verbose       Verbose mode
@@ -54,6 +56,8 @@ Sub-command description:
     install basic tools - installs a basic set of tools. Highly recommended to run it the first time.
     install version - installs a particular API version
     update all - updates all installed packages to the latest versions.
+    create avd - creates a new AVD. It will install the package, if required. By default, Google API build with X86_64 (on 64-bit) and X86 on 32-bit will be created.
+    start avd - Starts an existing AVD. To be implemented.
 """
 
 
@@ -62,9 +66,6 @@ TODO
 
 Create AVD
 `avdmanager --verbose create avd --name test_avd1 --package 'system-images;android-28;google_apis_playstore;x86_64'`
-
-Verify AVD creation
-`avdmanager --verbose list avd`
 
 Start AVD
 `/usr/local/Caskroom/android-sdk/4333796/emulator/emulator -avd test_avd1 -no-boot-anim -no-skin -verbose`
@@ -106,6 +107,16 @@ def main():
         androide.install_basic_packages()
     elif args['list'] and args['avds']:
         androide.list_avds()
+    elif args['create'] and args['avd']:
+        name = args['<avd-name>']
+        api_version = args['<android-api-version>']
+        api_type = get_api_type(args)
+        arch = get_architecture(args)
+        androide.create_avd(name, api_version, arch, api_type)
+    elif args['start'] and args['avd']:
+        # To be implemented
+        name = args['<avd-name>']
+        output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
