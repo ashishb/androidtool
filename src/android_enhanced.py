@@ -259,7 +259,7 @@ class AndroidEnhanced(object):
     def _get_installed_packages() -> [str]:
         # Don't pass --include_obsolete here since that seems to list all installed packages under obsolete
         # packages section as well.
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list')
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         start_line = 'Installed packages:'.lower()
         end_line = 'Available Packages:'.lower()
         lines = stdout.split('\n')
@@ -271,7 +271,7 @@ class AndroidEnhanced(object):
                 break
             else:
                 i += 1
-        installed_packages = list()
+        installed_packages = set()
         for j in range(i, len(lines)):
             line = lines[j]
             if line.lower().find(end_line) != -1:
@@ -288,9 +288,10 @@ class AndroidEnhanced(object):
                 continue
             if line.startswith('Installed Location:'):
                 continue
-            installed_packages.append(line)
-        installed_packages = sorted(installed_packages)
-        return installed_packages
+            if line.startswith('Installed Obsolete Packages:'):
+                continue
+            installed_packages.add(line)
+        return sorted(installed_packages)
 
     @staticmethod
     def _get_build_tools() -> [str]:

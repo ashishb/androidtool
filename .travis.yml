@@ -68,7 +68,7 @@ matrix:
         - python3 src/main.py install version 4 --verbose
         - python3 src/main.py install version 14 --arm
         - python3 src/main.py install version 27 --x86
-        - python3 src/main.py list installed packages
+        - python3 src/main.py list installed packages | grep android-4
         - python3 src/main.py list installed packages | grep android-14
         # TODO(ashishb): Make this work, for now, it just hangs.
         # - python3 src/main.py update all --verbose
