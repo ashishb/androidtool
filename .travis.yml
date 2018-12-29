@@ -95,6 +95,21 @@ matrix:
       # TODO(ashishb): Make this work, for now, it just hangs.
       # - python3 src/main.py update all --verbose
 
+    - name: Test more install commands on JDK8
+      language: android
+      python:
+      - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      before_script:
+      - sudo apt-get install python3-pip
+      - pip3 install --user -r requirements.txt
+      - jdk_switcher use oraclejdk8
+      script:
+      - python3 src/main.py install version 27 --x86
+      - python3 src/main.py install version 28 --x86_64 --google-apis -v
+      - python3 src/main.py list installed packages
+
     - name: Test list avds command
       language: java
       python:

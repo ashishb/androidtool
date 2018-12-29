@@ -346,7 +346,8 @@ class AndroidEnhanced(object):
 
     @staticmethod
     def _get_add_ons_package(version, api_type) -> Optional[str]:
-        if api_type == 'google_apis':
+        # addons package is gone going forward. It was present only on these versions.
+        if api_type == 'google_apis' and version in [15, 16, 17, 18, 19, 21, 22, 23, 24]:
             return 'add-ons;addon-google_apis-google-%s' % version
         # Note: There are two more packages types, GDK for Glass and Google TV which is deprecated.
         # No point, supporting them here.
