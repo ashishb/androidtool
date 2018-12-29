@@ -24,15 +24,6 @@ matrix:
       before_cache:
         - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      # https://docs.travis-ci.com/user/languages/android/#caching
-      cache:
-        directories:
-        - $HOME/.gradle/caches/
-        - $HOME/.gradle/wrapper/
-#      android:
-#        components:
-#        - tools
-#        - platform-tools
       before_script:
         - sudo apt-get install python3-pip
         - pip3 install --user -r requirements.txt
@@ -41,79 +32,80 @@ matrix:
         - python3 src/main.py install basic packages --verbose
         - python3 src/main.py doctor --verbose
 
-    - name: Test list commands on JDK8
+    - name: Test list packages commands on JDK8
       language: android # list testing
       python:
-      - 3.7
+        - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_cache:
-      - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-      - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      # https://docs.travis-ci.com/user/languages/android/#caching
-      cache:
-          directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
-      #      android:
-      #        components:
-      #        - tools
-      #        - platform-tools
+        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
       before_script:
-      - sudo apt-get install python3-pip
-      - pip3 install --user -r requirements.txt
-      - jdk_switcher use oraclejdk8
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
       script:
-      - python3 src/main.py list api versions --arm
-      - python3 src/main.py list build tools
-      - python3 src/main.py list installed packages
-      - python3 src/main.py list other packages
+        - python3 src/main.py list api versions --arm
+        - python3 src/main.py list build tools
+        - python3 src/main.py list installed packages
+        - python3 src/main.py list other packages
 
-    - name: Test install commands on JDK8
+    - name: Test install API 4 and API 14 on JDK8
       language: android # Install testing
       python:
-      - 3.7
+        - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_cache:
-      - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-      - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      # https://docs.travis-ci.com/user/languages/android/#caching
-      cache:
-          directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
       before_script:
-      - sudo apt-get install python3-pip
-      - pip3 install --user -r requirements.txt
-      - jdk_switcher use oraclejdk8
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
       script:
-      - python3 src/main.py install version 4 --verbose
-      - python3 src/main.py install version 14 --arm
-      - python3 src/main.py install version 27 --x86
-      - python3 src/main.py list installed packages
-      # TODO(ashishb): Make this work, for now, it just hangs.
-      # - python3 src/main.py update all --verbose
+        - python3 src/main.py install version 4 --verbose
+        - python3 src/main.py install version 14 --arm
+        - python3 src/main.py install version 27 --x86
+        - python3 src/main.py list installed packages
+        - python3 src/main.py list installed packages | grep android-14
+        # TODO(ashishb): Make this work, for now, it just hangs.
+        # - python3 src/main.py update all --verbose
 
-    - name: Test more install commands on JDK8
+    - name: Test install API 27 on JDK8
+      language: android
+      python:
+        - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      before_script:
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+      script:
+        - python3 src/main.py install version 27 --x86
+        - python3 src/main.py list installed packages | grep android-27
+
+    - name: Test install API 28 on JDK8
       language: android
       python:
       - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
-      - sudo apt-get install python3-pip
-      - pip3 install --user -r requirements.txt
-      - jdk_switcher use oraclejdk8
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
       script:
-      - python3 src/main.py install version 27 --x86
-      - python3 src/main.py install version 28 --x86_64 --google-apis -v
-      - python3 src/main.py list installed packages
+        - python3 src/main.py install version 28 --x86_64 --google-apis -v
+        - python3 src/main.py list installed packages | grep android-28
+
 
     - name: Test list avds command
       language: java
       python:
-      - 3.7
+        - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       cache:
@@ -124,19 +116,19 @@ matrix:
         # Android build cache (see http://tools.android.com/tech-docs/build-cache)
         - $HOME/.android/build-cache
       before_script:
-      # Python
-      - sudo apt-get install python3-pip
-      - pip3 install --user -r requirements.txt
-      - jdk_switcher use oraclejdk8
-      - touch $HOME/.android/repositories.cfg
-      # Android
-      # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
-      # Latest version available here: https://developer.android.com/studio/#command-tools
-      - if test ! -e $HOME/android-sdk-dl/sdk-tools.zip ; then curl https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > $HOME/android-sdk-dl/sdk-tools.zip ; fi
-      - unzip -qq -n $HOME/android-sdk-dl/sdk-tools.zip -d $HOME/android-sdk
-      # Install or update Android SDK components (will not do anything if already up to date thanks to the cache mechanism)
-      - echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools' > /dev/null
+        # Python
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+        - touch $HOME/.android/repositories.cfg
+        # Android
+        # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
+        # Latest version available here: https://developer.android.com/studio/#command-tools
+        - if test ! -e $HOME/android-sdk-dl/sdk-tools.zip ; then curl https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > $HOME/android-sdk-dl/sdk-tools.zip ; fi
+        - unzip -qq -n $HOME/android-sdk-dl/sdk-tools.zip -d $HOME/android-sdk
+        # Install or update Android SDK components (will not do anything if already up to date thanks to the cache mechanism)
+        - echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools' > /dev/null
       script:
-      - touch $HOME/.android/repositories.cfg
-      - export ANDROID_SDK_ROOT=$HOME/android-sdk
-      - python3 src/main.py list avds --verbose
+        - touch $HOME/.android/repositories.cfg
+        - export ANDROID_SDK_ROOT=$HOME/android-sdk
+        - python3 src/main.py list avds --verbose
