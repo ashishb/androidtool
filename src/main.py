@@ -2,6 +2,8 @@
 
 import sys
 import os
+from typing import Optional
+
 import docopt
 
 
@@ -65,7 +67,7 @@ Verify AVD creation
 `avdmanager --verbose list avd`
 
 Start AVD
-`/usr/local/Caskroom/android-sdk/4333796/emulator/emulator -avd test_avd1 -no-boot-anim -verbose`
+`/usr/local/Caskroom/android-sdk/4333796/emulator/emulator -avd test_avd1 -no-boot-anim -no-skin -verbose`
 
 
 """
@@ -108,7 +110,7 @@ def main():
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 
 
-def get_api_type(args):
+def get_api_type(args) -> Optional[str]:
     api_type = None  # default
     if args['--no-google-apis']:
         api_type = 'default'
@@ -121,7 +123,7 @@ def get_api_type(args):
     return api_type
 
 
-def get_architecture(args):
+def get_architecture(args) -> Optional[str]:
     arch = None  # default
     if args['--x86']:
         arch = 'x86'

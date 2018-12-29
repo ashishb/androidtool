@@ -1,3 +1,4 @@
+import os
 import platform
 import re
 import subprocess
@@ -18,7 +19,7 @@ _SET_JAVA8_AS_DEFAULT_ON_MAC = 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8
 _GET_ALL_JAVA_VERSIONS_ON_MAC = '/usr/libexec/java_home -V'
 _GET_ALL_JAVA_VERSIONS_ON_LINUX = 'update-alternatives --display java'
 
-_BUILD_TOOLS_REGEX = 'build-tools;\S*'
+_BUILD_TOOLS_REGEX = r'build-tools;\S*'
 _SYSTEM_IMAGES_REGEX = 'system-images;android-([0-9]+);(.*);(.*)\n'
 
 
@@ -53,7 +54,6 @@ class AndroidEnhanced(object):
         return success
 
     def list_packages(self, arch=None, api_type=None) -> None:
-        AndroidEnhanced._print_location_of_android_sdk()
         print_verbose('List packages(arch: %s, api_type: %s)' % (arch, api_type))
         if api_type is None:
             google_api_type = '.*?'
@@ -79,24 +79,30 @@ class AndroidEnhanced(object):
             arch_to_android_version_map[google_api_type][arch].append(android_api_version)
 
         for (google_api_type, architectures) in arch_to_android_version_map.items():
-            print('Google API type: %s' % google_api_type)
+            if google_api_type == 'default':
+                print('Google API type: default (Standard Android image; no Google API)')
+            else:
+                print('Google API type: %s' % google_api_type)
             for arch in architectures:
                 android_api_versions = arch_to_android_version_map[google_api_type][arch]
                 print('%s -> %s' % (arch, ', '.join(android_api_versions)))
             print()
 
     def list_installed_packages(self):
-        AndroidEnhanced._print_location_of_android_sdk()
         installed_packages = self._get_installed_packages()
         print('\n'.join(installed_packages))
 
     def list_avds(self):
-        AndroidEnhanced._print_location_of_android_sdk()
-        return_code, stdout, stderr = self._execute_cmd('avdmanager --verbose list avd')
+        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
+        if not sdk_location:
+            print_error_and_exit('Android SDK not found')
+        cmd = '%s --verbose list avd' % os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
+        return_code, stdout, stderr = self._execute_cmd(cmd)
+        if return_code != 0:
+            print_error_and_exit('Failed to execute avdmanager')
         print(stdout)
 
     def install_api_version(self, version, arch=None, api_type=None) -> None:
-        AndroidEnhanced._print_location_of_android_sdk()
         platform_package = self._get_platform_package(version)
         sources_package = self._get_sources_package(version)
         addons_package = self._get_add_ons_package(version, api_type)
@@ -114,13 +120,11 @@ class AndroidEnhanced(object):
             print_error_and_exit('Failed to install packages for api version: %s' % version)
 
     def list_build_tools(self):
-        AndroidEnhanced._print_location_of_android_sdk()
         build_tools = self._get_build_tools()
         for build_tool in build_tools:
             print(build_tool)
 
     def list_others(self):
-        AndroidEnhanced._print_location_of_android_sdk()
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
         if return_code != 0:
             print_error_and_exit('Failed to list packages')
@@ -159,13 +163,11 @@ class AndroidEnhanced(object):
             print(line)
 
     def install_basic_packages(self):
-        AndroidEnhanced._print_location_of_android_sdk()
         packages_to_install = self._get_basic_packages()
         if not self._install_sdk_packages(packages_to_install):
             print_error_and_exit('Failed to install basic packages')
 
     def update_all(self):
-        AndroidEnhanced._print_location_of_android_sdk()
         return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
         if return_code != 0:
             print_error_and_exit('Failed to update, return code: %d' % return_code)
@@ -361,8 +363,13 @@ class AndroidEnhanced(object):
                 print_verbose('System images are bundled in the platform below API 10')
                 return None
             # API 24 onwards, for x86, prefer to install google_apis_playstore image
-            # then google_apis image. It seems that's a better image.
+            # then google_apis image. It seems it is a better image.
             if version >= 24 and api_type == 'google_apis' and arch == 'x86':
+                api_type = 'google_apis_playstore'
+                return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
+            # API 28 onwards, for x86_64, prefer to install google_apis_playstore image
+            # then google_apis image. It seems it is a better image.
+            if version >= 28 and api_type == 'google_apis' and arch == 'x86_64':
                 api_type = 'google_apis_playstore'
                 return 'system-images;android-%s;%s;%s' % (version, api_type, arch)
         except ValueError:
@@ -386,13 +393,13 @@ class AndroidEnhanced(object):
         return True
 
     @staticmethod
-    def _print_location_of_android_sdk():
-        android_sdk_location = AndroidEnhanced._get_location_of_android_sdk()
-        if android_sdk_location:
-            print_verbose('Location of Android SDK: %s' % android_sdk_location)
-
-    @staticmethod
     def _get_location_of_android_sdk() -> Optional[str]:
+        try:
+            return os.environ['ANDROID_SDK_ROOT']
+        except KeyError:
+            print_error_and_exit(
+                'Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
+
         process = subprocess.Popen(
             'realpath $(dirname $(readlink $(command -v sdkmanager)))/../..',
             shell=True,
@@ -410,6 +417,10 @@ class AndroidEnhanced(object):
 
     @staticmethod
     def _execute_cmd(cmd) -> (int, str, str):
+        """
+        :param cmd: Command to be executed
+        :return: (returncode, stdout, stderr)
+        """
         print_verbose('Executing command: %s' % cmd)
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -453,3 +464,7 @@ class AndroidEnhanced(object):
     @staticmethod
     def _on_mac():
         return platform.system() == 'Darwin'
+
+    @staticmethod
+    def _is_64bit_architecture():
+        return platform.architecture()[0] == '64bit'
