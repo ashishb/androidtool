@@ -93,10 +93,10 @@ class AndroidEnhanced(object):
         print('\n'.join(installed_packages))
 
     def list_avds(self):
-        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
-        if not sdk_location:
-            print_error_and_exit('Android SDK not found')
-        cmd = '%s --verbose list avd' % os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
+        avd_manager = AndroidEnhanced._get_location_of_avd_manager()
+        if not avd_manager:
+            print_error_and_exit('avdmanager not found')
+        cmd = '%s --verbose list avd' % avd_manager
         return_code, stdout, stderr = self._execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to execute avdmanager')
@@ -243,7 +243,7 @@ class AndroidEnhanced(object):
             return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
             java_version_regex = 'java-([0-9]+.*?)/'
         elif AndroidEnhanced._on_mac():
-            java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
+            java_version_regex = r'"([0-9]+\.[0-9]+)\..*"'
             return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
         else:
             return []
@@ -383,7 +383,7 @@ class AndroidEnhanced(object):
             exists = self._does_package_exist(package_name)
             if not exists:
                 print_message('Package \"%s\" not found' % package_name)
-                return
+                return False
 
         print_message('Installing packages [%s]...' % ', '.join(package_names))
         package_names_str = '\"' + '\" \"'.join(package_names) + '\"'
@@ -393,6 +393,13 @@ class AndroidEnhanced(object):
             print_error('Stderr is \n%s' % stderr)
             return False
         return True
+
+    @staticmethod
+    def _get_location_of_avd_manager() -> Optional[str]:
+        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
+        if not sdk_location:
+            return None
+        return os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
 
     @staticmethod
     def _get_location_of_android_sdk() -> Optional[str]:
