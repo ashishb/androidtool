@@ -23,9 +23,11 @@ _BUILD_TOOLS_REGEX = r'build-tools;\S*'
 _SYSTEM_IMAGES_REGEX = 'system-images;android-([0-9]+);(.*);(.*)\n'
 
 
-class AndroidEnhanced(object):
+class AndroidEnhanced:
 
     def __init__(self) -> None:
+        # Initialize to None
+        self._sdk_manager = None
         pass
 
     def run_doctor(self) -> None:
@@ -37,19 +39,18 @@ class AndroidEnhanced(object):
         if not self._ensure_basic_packages_are_installed():
             print_error_and_exit('Not all basic packages are installed')
     
-    @staticmethod
-    def _ensure_basic_packages_are_installed() -> bool:
+    def _ensure_basic_packages_are_installed(self) -> bool:
         success = True
-        installed_packages = AndroidEnhanced._get_installed_packages()
-        basic_packages = AndroidEnhanced._get_basic_packages()
-        n = len(basic_packages)
-        for i in range(0, n):
+        installed_packages = self._get_installed_packages()
+        basic_packages = self._get_basic_packages()
+        num_packages = len(basic_packages)
+        for i in range(0, num_packages):
             basic_package = basic_packages[i]
             if basic_package not in installed_packages:
                 print_error('Basic packages \"%s\" is not installed' % basic_package)
                 success = False
             else:
-                print_message('Package %d/%d: \"%s\" is installed' % (i + 1, n, basic_package))
+                print_message('Package %d/%d: \"%s\" is installed' % (i + 1, num_packages, basic_package))
 
         return success
 
@@ -65,7 +66,10 @@ class AndroidEnhanced(object):
         else:
             arch_pattern = arch + '.*?'
         regex_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        return_code, stdout, stderr = self._execute_cmd(
+            '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path())
+        if return_code != 0:
+            print_error_and_exit('Failed to list packages (return code: %d)' % return_code)
         system_images = re.findall(regex_pattern, stdout)
         arch_to_android_version_map = {}
         for system_image in system_images:
@@ -83,17 +87,20 @@ class AndroidEnhanced(object):
                 print('Google API type: default (Standard Android image; no Google API)')
             else:
                 print('Google API type: %s' % google_api_type)
-            for arch in architectures:
-                android_api_versions = arch_to_android_version_map[google_api_type][arch]
-                print('%s -> %s' % (arch, ', '.join(android_api_versions)))
+            for architecture in architectures:
+                android_api_versions = arch_to_android_version_map[google_api_type][architecture]
+                print('%s -> %s' % (architecture, ', '.join(android_api_versions)))
             print()
 
     def list_installed_packages(self):
         installed_packages = self._get_installed_packages()
-        print('\n'.join(installed_packages))
+        if installed_packages:
+            print('\n'.join(installed_packages))
+        else:
+            print_error('No installed packages found')
 
     def list_avds(self):
-        avd_manager = AndroidEnhanced._get_location_of_avd_manager()
+        avd_manager = AndroidEnhanced._get_avd_manager_path()
         if not avd_manager:
             print_error_and_exit('avdmanager not found')
         cmd = '%s --verbose list avd' % avd_manager
@@ -125,22 +132,20 @@ class AndroidEnhanced(object):
             print(build_tool)
 
     def list_others(self):
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
+        return_code, stdout, stderr = self._execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to list packages')
 
         print('Installed Packages:')
         lines = stdout.split('\n')
-        for i in range(0, len(lines)):
-            line = lines[i].strip()
+        for (i, line) in enumerate(lines):
+            line = line.strip()
             previous_line = None
             if i > 0:
                 previous_line = lines[i - 1].strip()
 
-            if not previous_line or previous_line.startswith('---'):
-                is_package_name = True
-            else:
-                is_package_name = False
+            is_package_name = not previous_line or previous_line.startswith('---')
 
             if not is_package_name:
                 continue
@@ -168,7 +173,8 @@ class AndroidEnhanced(object):
             print_error_and_exit('Failed to install basic packages')
 
     def update_all(self):
-        return_code, stdout, stderr = self._execute_cmd('sdkmanager --update')
+        cmd = '%s --update' % self._get_sdk_manager_path()
+        return_code, stdout, stderr = self._execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to update, return code: %d' % return_code)
         count = 0
@@ -207,17 +213,13 @@ class AndroidEnhanced(object):
         else:
             print_message('Correct Java version %s is installed' % default_java_version)
 
-    @staticmethod
-    def _ensure_sdkmanager_is_installed():
-        # Only works on Mac and GNU/Linux
-        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
-            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v sdkmanager')
-            if return_code != 0:
-                print_error_and_exit('sdkamanger not found, is Android SDK installed? (return code: %d)' % return_code)
+    def _ensure_sdkmanager_is_installed(self):
+        if not self._get_sdk_manager_path():
+            print_error_and_exit('sdkamanger not found, is Android SDK installed?')
 
-    @staticmethod
-    def _accept_all_licenses():
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('yes | sdkmanager --licenses')
+    def _accept_all_licenses(self):
+        cmd = 'yes | %s --licenses' % self._get_sdk_manager_path()
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to accept licenses, return code: %d' % return_code)
         license_regex = '([0-9]*) of ([0-9]*) SDK package licenses not accepted'
@@ -230,7 +232,11 @@ class AndroidEnhanced(object):
     @staticmethod
     def _get_default_java_version() -> Optional[str]:
         return_code, stdout, stderr = AndroidEnhanced._execute_cmd('java -version')
-        java_version_regex = '"([0-9]+\.[0-9]+)\..*"'
+        if return_code != 0:
+            print_error('Failed to get java version')
+            return None
+        # TODO(ashishb): Do I need two different regex for Mac and Linux like _get_all_java_versions here?
+        java_version_regex = r'"([0-9]+\.[0-9]+)\..*"'
         version = re.search(java_version_regex, stderr)
         if version is None:
             return None
@@ -247,6 +253,10 @@ class AndroidEnhanced(object):
             return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
         else:
             return []
+
+        if return_code != 0:
+            print_error('Failed to list java versions')
+            return []
         output = ''
         output += stdout
         output += stderr
@@ -255,11 +265,13 @@ class AndroidEnhanced(object):
         print_verbose('Versions are %s' % versions)
         return versions
     
-    @staticmethod
-    def _get_installed_packages() -> [str]:
-        # Don't pass --include_obsolete here since that seems to list all installed packages under obsolete
-        # packages section as well.
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+    def _get_installed_packages(self) -> [str]:
+        cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
+        if return_code != 0:
+            print_error('Failed to list packages')
+            return None
+
         start_line = 'Installed packages:'.lower()
         end_line = 'Available Packages:'.lower()
         lines = stdout.split('\n')
@@ -293,12 +305,12 @@ class AndroidEnhanced(object):
             installed_packages.add(line)
         return sorted(installed_packages)
 
-    @staticmethod
-    def _get_build_tools() -> [str]:
+    def _get_build_tools(self) -> [str]:
         """
         :return: List of build tools packages, sorted by version number, latest package comes last
         """
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('sdkmanager --verbose --list --include_obsolete')
+        cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
+        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s' % (stdout, stderr))
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
@@ -306,9 +318,8 @@ class AndroidEnhanced(object):
         print_verbose('Build tools are %s' % build_tools)
         return build_tools
 
-    @staticmethod
-    def _get_basic_packages() -> [str]:
-        build_tools = AndroidEnhanced._get_build_tools()
+    def _get_basic_packages(self) -> [str]:
+        build_tools = self._get_build_tools()
         if not build_tools:
             print_error_and_exit('Build tools list is empty, this is unexpected')
         latest_build_package = build_tools[-1]
@@ -387,7 +398,8 @@ class AndroidEnhanced(object):
 
         print_message('Installing packages [%s]...' % ', '.join(package_names))
         package_names_str = '\"' + '\" \"'.join(package_names) + '\"'
-        return_code, stdout, stderr = self._execute_cmd('yes | sdkmanager --verbose %s' % package_names_str)
+        cmd = 'yes | %s --verbose %s' % (self._get_sdk_manager_path(), package_names_str)
+        return_code, stdout, stderr = self._execute_cmd(cmd)
         if return_code != 0:
             print_error('Failed to install packages \"%s\"' % ' '.join(package_names))
             print_error('Stderr is \n%s' % stderr)
@@ -395,11 +407,38 @@ class AndroidEnhanced(object):
         return True
 
     @staticmethod
-    def _get_location_of_avd_manager() -> Optional[str]:
+    def _get_avd_manager_path() -> Optional[str]:
         sdk_location = AndroidEnhanced._get_location_of_android_sdk()
         if not sdk_location:
             return None
         return os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
+
+    def _get_sdk_manager_path(self) -> Optional[str]:
+        # Return the cached value
+        if self._sdk_manager:
+            return self._sdk_manager
+
+        # Only works on Mac and GNU/Linux
+        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
+            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v sdkmanager')
+            if return_code == 0:
+                self._sdk_manager = 'sdkmanager'
+                return self._sdk_manager
+            else:
+                print_verbose('sdkamanger not in path, checking for ANDROID_SDK_ROOT')
+
+        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
+        if not sdk_location:
+            print_error('Unable to find Android SDK')
+            return None
+
+        sdk_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'sdkmanager')
+        if os.path.exists(sdk_manager_path):
+            self._sdk_manager = sdk_manager_path
+            return sdk_manager_path
+        else:
+            print_error_and_exit('sdkmanager not found at \"%s\"' % sdk_manager_path)
+            return None
 
     @staticmethod
     def _get_location_of_android_sdk() -> Optional[str]:
@@ -408,17 +447,6 @@ class AndroidEnhanced(object):
         except KeyError:
             print_error_and_exit(
                 'Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
-
-        process = subprocess.Popen(
-            'realpath $(dirname $(readlink $(command -v sdkmanager)))/../..',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            print_verbose('Android SDK not found, return code: %d' % process.returncode)
-            return None
-        return stdout.decode('utf-8').strip()
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     def _does_package_exist(self, package_name):
