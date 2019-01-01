@@ -1,6 +1,17 @@
 # https://stackoverflow.com/questions/27644586/how-to-set-up-travis-ci-with-multiple-languages
 matrix:
   include:
+    - name: Lint check code
+      language: python
+      sudo: false
+      python:
+        - 3.6
+      install:
+        - pip install -r requirements.txt
+        - pip install pylint
+      script:
+        - ./tests/lint_check_python3.sh
+
     - name: Test doctor against OpenJDK9
       language: Java  # OpenJDK9 testing (Android language on Travis does not support JDK9)
       python:

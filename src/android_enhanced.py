@@ -28,7 +28,6 @@ class AndroidEnhanced:
     def __init__(self) -> None:
         # Initialize to None
         self._sdk_manager = None
-        pass
 
     def run_doctor(self) -> None:
         print_message('Checking java version...')
@@ -449,6 +448,7 @@ class AndroidEnhanced:
                 'Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
+    #pylint: disable=W0613
     def _does_package_exist(self, package_name):
         return True
 
