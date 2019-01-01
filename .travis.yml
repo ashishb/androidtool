@@ -2,7 +2,7 @@
 matrix:
   include:
     - name: Test doctor against OpenJDK9
-      language: Java # OpenJDK9 testing (Android language on Travis does not support JDK9)
+      language: Java  # OpenJDK9 testing (Android language on Travis does not support JDK9)
       python:
         - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
@@ -16,7 +16,7 @@ matrix:
         - python3 src/main.py doctor --verbose && exit 1 || exit 0
 
     - name: Test doctor against JDK8
-      language: android # Doctor testing
+      language: android  # Doctor testing
       python:
         - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
@@ -30,14 +30,11 @@ matrix:
         - python3 src/main.py doctor --verbose
 
     - name: Test list packages commands on JDK8
-      language: android # list testing
+      language: android  # list testing
       python:
         - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
-      before_cache:
-        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
       before_script:
         - sudo apt-get install python3-pip
         - pip3 install --user -r requirements.txt
@@ -55,9 +52,6 @@ matrix:
         - 3.7
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
-      before_cache:
-        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
       before_script:
         - sudo apt-get install python3-pip
         - pip3 install --user -r requirements.txt
@@ -108,11 +102,11 @@ matrix:
       jdk: oraclejdk8
       cache:
         directories:
-        # Android SDK
-        - $HOME/android-sdk-dl
-        - $HOME/android-sdk
-        # Android build cache (see http://tools.android.com/tech-docs/build-cache)
-        - $HOME/.android/build-cache
+          # Android SDK
+          - $HOME/android-sdk-dl
+          - $HOME/android-sdk
+          # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+          - $HOME/.android/build-cache
       before_script:
         # Python
         - sudo apt-get install python3-pip
