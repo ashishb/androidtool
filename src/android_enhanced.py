@@ -29,6 +29,7 @@ class AndroidEnhanced:
     def __init__(self) -> None:
         # Initialize to None
         self._avd_manager = None
+        self._emulator = None
         self._sdk_manager = None
 
     def run_doctor(self) -> None:
@@ -212,6 +213,17 @@ class AndroidEnhanced:
             print_error('stdout: %s' % stdout)
             print_error_and_exit('stderr: %s' % stderr)
         print_message('AVD \"%s\" created successfully' % avd_name)
+
+    def start_avd(self, avd_name, headless_mode, verbose_mode):
+        # cmd = '%s -avd %s -no-boot-anim -no-skin' % (self._get_emulator_path(), avd_name)
+        cmd = '%s -avd %s -no-boot-anim' % (self._get_emulator_path(), avd_name)
+        if headless_mode:
+            cmd = '%s -no-window' % cmd.strip()
+        if verbose_mode:
+            cmd = '%s -verbose' % cmd.strip()
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
+        if return_code != 0:
+            print_error_and_exit('Failed to start emulator, stdout: ' + stdout + ' stderr: ' + stderr)
 
     @staticmethod
     def _ensure_correct_java_version():
@@ -450,6 +462,16 @@ class AndroidEnhanced:
             print_verbose('sdkmanager is located at %s' % self._sdk_manager)
         # Return the cached value
         return self._sdk_manager
+
+    def _get_emulator_path(self):
+        """
+        :return: Path to Android emulator binary, caches the result for the future use.
+        """
+        if not self._emulator:
+            self._emulator = AndroidSdkHelper.get_emulator_path_uncached()
+            print_verbose('Emulator is located at %s' % self._emulator)
+        # Return the cached value
+        return self._emulator
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     #pylint: disable=W0613

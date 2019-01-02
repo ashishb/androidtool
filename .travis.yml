@@ -152,7 +152,7 @@ matrix:
         - export ANDROID_SDK_ROOT=$HOME/android-sdk
         - python3 src/main.py list avds --verbose
 
-    - name:  Test create AVD API 24 command on JDK8
+    - name:  Test create and start AVD API 24 command on JDK8
       language: java
       python:
         - 3.7
@@ -162,7 +162,8 @@ matrix:
         directories:
           # Android SDK
           - $HOME/android-sdk-dl
-          - $HOME/android-sdk
+          # Don't cache SDK since it slows down the test
+          # - $HOME/android-sdk
           # Android build cache (see http://tools.android.com/tech-docs/build-cache)
           - $HOME/.android/build-cache
       before_script:
@@ -182,10 +183,15 @@ matrix:
         - set -e
         - touch $HOME/.android/repositories.cfg
         - export ANDROID_SDK_ROOT=$HOME/android-sdk
+        - python3 src/main.py install basic packages
         - python3 src/main.py create avd test_avd1 24 --arm --google-apis
         - python3 src/main.py list installed packages
         - python3 src/main.py list avds
         - python3 src/main.py list avds | grep test_avd1
+        # Only ARM version can be tested on Travis CI
+        - python3 src/main.py start avd test_avd1 --headless --verbose &
+        # Run for 60 seconds and then kill.
+        - sleep 60 && kill %1
 
     - name: Test create AVD API 28 command on JDK8
       language: java
@@ -197,7 +203,8 @@ matrix:
         directories:
           # Android SDK
           - $HOME/android-sdk-dl
-          - $HOME/android-sdk
+          # Don't cache SDK since it slows down the test
+          # - $HOME/android-sdk
           # Android build cache (see http://tools.android.com/tech-docs/build-cache)
           - $HOME/.android/build-cache
       before_script:
@@ -232,7 +239,8 @@ matrix:
         directories:
         # Android SDK
         - $HOME/android-sdk-dl
-        - $HOME/android-sdk
+        # Don't cache SDK since it slows down the test
+        # - $HOME/android-sdk
         # Android build cache (see http://tools.android.com/tech-docs/build-cache)
         - $HOME/.android/build-cache
       before_script:

@@ -35,12 +35,12 @@ Usage:
     androidtool [options] list installed packages
     androidtool [options] list api versions [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear] 
     androidtool [options] list other packages
-    androidtool [options] list avds
     androidtool [options] install basic packages
     androidtool [options] install version <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
     androidtool [options] update all
+    androidtool [options] list avds
     androidtool [options] create avd <avd-name> <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
-    androidtool [options] start avd <avd-name>
+    androidtool [options] start avd <avd-name> [--headless]
 
 Options:
     -v, --verbose       Verbose mode
@@ -116,7 +116,8 @@ def main():
     elif args['start'] and args['avd']:
         # To be implemented
         name = args['<avd-name>']
-        output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
+        headless_mode = args['--headless']
+        androide.start_avd(name, headless_mode, verbose_mode)
     else:
         output_helper.print_error_and_exit('Not implemented: "%s"' % ' '.join(sys.argv))
 

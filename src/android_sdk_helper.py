@@ -51,18 +51,21 @@ class AndroidSdkHelper:
             print_error('Unable to find Android SDK')
             return None
 
+        # New SDK path
         emulator_path = os.path.join(sdk_location, 'emulator', 'emulator')
         if os.path.exists(emulator_path):
             return emulator_path
         else:
-            print_error_and_exit('emulator not found at \"%s\", looking for an alternative...' % emulator_path)
+            print_error('emulator not found at \"%s\", looking for an alternative...' % emulator_path)
 
-        emulator_path = os.path.join(sdk_location, 'emulator')
+        # Old SDK path
+        emulator_path = os.path.join(sdk_location, 'tools', 'emulator')
         if os.path.exists(emulator_path) and os.path.isfile(emulator_path):
             return emulator_path
         else:
-            print_error_and_exit('emulator not found at \"%s\"' % emulator_path)
-            return None
+            print_error('emulator not found at \"%s\"' % emulator_path)
+
+        print_error_and_exit('emulator not found')
 
     @staticmethod
     def get_sdk_manager_path_uncached() -> Optional[str]:
