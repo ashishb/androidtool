@@ -110,5 +110,7 @@ release/README.md
 release/androide/main.py
 release/androide/output_helper.py
 release/androide/android_enhanced.py
+release/androide/android_sdk_helper.py
+release/androide/platform_helper.py
 release/androide/version.txt
 

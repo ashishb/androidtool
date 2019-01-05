@@ -57,7 +57,7 @@ Sub-command description:
     install version - installs a particular API version
     update all - updates all installed packages to the latest versions.
     create avd - creates a new AVD. It will install the package, if required. By default, Google API build with X86_64 (on 64-bit) and X86 on 32-bit will be created.
-    start avd - Starts an existing AVD. To be implemented.
+    start avd - Starts an existing AVD.
 """
 
 
