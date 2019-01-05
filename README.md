@@ -10,7 +10,7 @@ Note: Python 2 install is not supported
 
 A better version of the command-line android tool with a more intuitive command-line interface.
 
-###Usage
+### Usage
 
     androidtool [options] doctor
     androidtool [options] list build tools
@@ -24,11 +24,11 @@ A better version of the command-line android tool with a more intuitive command-
     androidtool [options] create avd <avd-name> <android-api-version> [--x86_64 | --x86 | --arm] [--google-apis | --no-google-apis | --android-tv | --android-wear]
     androidtool [options] start avd <avd-name> [--headless]
 
-###Options
+### Options
     -v, --verbose       Verbose mode
 
 
-###Sub-command description
+### Sub-command description
     doctor - ensures that you have right version of Java. In the future, it will check Android SDK installation as well.
     list build tools - lists available build tools
     list api versions - lists different SDK versions available to install
