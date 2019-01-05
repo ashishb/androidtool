@@ -4,7 +4,7 @@ from typing import Optional
 try:
     # This fails when the code is executed directly and not as a part of python package installation,
     # I definitely need a better way to handle this.
-    from androide.output_helper import print_message, print_error, print_error_and_exit
+    from androide.output_helper import print_message, print_error, print_error_and_exit, print_verbose
     from androide.android_sdk_helper import AndroidSdkHelper
     from androide.platform_helper import PlatformHelper
 except ImportError:
