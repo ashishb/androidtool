@@ -15,15 +15,14 @@ def _using_python2():
 assert not _using_python2(), 'You are using Python 2 which is not supported. Use Python 3.'
 
 try:
+    # This works when the code is executed directly.
+    import android_enhanced
+    import output_helper
+except ImportError:
     # This fails when the code is executed directly and not as a part of python package installation,
     # I definitely need a better way to handle this.
     from androide import android_enhanced
     from androide import output_helper
-except ImportError:
-    # This works when the code is executed directly.
-    import android_enhanced
-    import output_helper
-
 
 _VERSION_FILE_NAME = 'version.txt'
 _USAGE_STRING = """

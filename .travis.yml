@@ -37,8 +37,12 @@ matrix:
         - pip3 install --user -r requirements.txt
         - jdk_switcher use oraclejdk8
       script:
-        - python3 src/main.py install basic packages --verbose
+        - python3 src/main.py install basic packages
         - python3 src/main.py doctor --verbose
+        - python3 src/main.py list api versions --arm | grep armeabi-v7a
+        - python3 src/main.py list api versions --google-apis | grep google_apis
+        - python3 src/main.py list api versions --arm --no-google-apis | grep default
+
 
     - name: Test list packages commands on JDK8
       language: android  # list testing
@@ -52,6 +56,8 @@ matrix:
         - jdk_switcher use oraclejdk8
       script:
         - python3 src/main.py list api versions --arm
+        - python3 src/main.py list api versions --google-apis
+        - python3 src/main.py list api versions --arm --no-google-apis
         - python3 src/main.py list build tools
         - python3 src/main.py list installed packages
         - python3 src/main.py list other packages

@@ -2,16 +2,16 @@ import re
 from typing import Optional
 
 try:
+    # This works when the code is executed directly.
+    from android_sdk_helper import AndroidSdkHelper
+    from platform_helper import PlatformHelper
+    from output_helper import print_message, print_error, print_error_and_exit, print_verbose
+except ImportError:
     # This fails when the code is executed directly and not as a part of python package installation,
     # I definitely need a better way to handle this.
     from androide.output_helper import print_message, print_error, print_error_and_exit, print_verbose
     from androide.android_sdk_helper import AndroidSdkHelper
     from androide.platform_helper import PlatformHelper
-except ImportError:
-    # This works when the code is executed directly.
-    from android_sdk_helper import AndroidSdkHelper
-    from platform_helper import PlatformHelper
-    from output_helper import print_message, print_error, print_error_and_exit, print_verbose
 
 
 _JAVA_VERSION_FOR_ANDROID = '1.8'
@@ -61,13 +61,14 @@ class AndroidEnhanced:
         if api_type is None:
             google_api_type = '.*?'
         else:
-            google_api_type = 'api_type'
+            google_api_type = api_type
 
         if arch is None:
             arch_pattern = '.*?'
         else:
             arch_pattern = arch + '.*?'
         regex_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
+        print_verbose('Package pattern: %s' % regex_pattern)
         return_code, stdout, stderr = PlatformHelper.execute_cmd(
             '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path())
         if return_code != 0:

@@ -2,14 +2,14 @@ import os
 from typing import Optional
 
 try:
+    # This works when the code is executed directly.
+    from platform_helper import PlatformHelper
+    from output_helper import print_error, print_error_and_exit, print_verbose
+except ImportError:
     # This fails when the code is executed directly and not as a part of python package installation,
     # I definitely need a better way to handle this.
     from androide.platform_helper import PlatformHelper
     from androide.output_helper import print_error, print_error_and_exit, print_verbose
-except ImportError:
-    # This works when the code is executed directly.
-    from platform_helper import PlatformHelper
-    from output_helper import print_error, print_error_and_exit, print_verbose
 
 
 class AndroidSdkHelper:
