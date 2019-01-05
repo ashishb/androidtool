@@ -350,7 +350,7 @@ class AndroidEnhanced:
         if return_code != 0:
             print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s' % (stdout, stderr))
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
-        build_tools = sorted(build_tools)
+        build_tools = sorted(set(build_tools))
         print_verbose('Build tools are %s' % build_tools)
         return build_tools
 
