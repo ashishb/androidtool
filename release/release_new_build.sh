@@ -4,7 +4,7 @@ set -euo pipefail
 # Works on both Mac and GNU/Linux.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 VERSION_FILENAME=${DIR}/../src/version.txt
-SRC_FILES=$(echo -n ${DIR}/../src/{main.py,output_helper.py,android_enhanced.py,version.txt})
+SRC_FILES=$(echo -n ${DIR}/../src/{android_sdk_helper.py,main.py,output_helper.py,platform_helper.py,android_enhanced.py,version.txt})
 
 # Open setup file to increment the version
   echo -n "Next the editor will open ${VERSION_FILENAME}, increment the version number in it. Press enter to continue:" &&

@@ -1,15 +1,16 @@
-import os
-import platform
 import re
-import subprocess
 from typing import Optional
 
 try:
     # This fails when the code is executed directly and not as a part of python package installation,
     # I definitely need a better way to handle this.
-    from androide.output_helper import print_message, print_error, print_error_and_exit, print_verbose
+    from androide.output_helper import print_message, print_error, print_error_and_exit
+    from androide.android_sdk_helper import AndroidSdkHelper
+    from androide.platform_helper import PlatformHelper
 except ImportError:
     # This works when the code is executed directly.
+    from android_sdk_helper import AndroidSdkHelper
+    from platform_helper import PlatformHelper
     from output_helper import print_message, print_error, print_error_and_exit, print_verbose
 
 
@@ -66,7 +67,7 @@ class AndroidEnhanced:
         else:
             arch_pattern = arch + '.*?'
         regex_pattern = 'system-images;android-([0-9]+);(%s);(%s)\n' % (google_api_type, arch_pattern)
-        return_code, stdout, stderr = self._execute_cmd(
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(
             '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path())
         if return_code != 0:
             print_error_and_exit('Failed to list packages (return code: %d)' % return_code)
@@ -104,7 +105,7 @@ class AndroidEnhanced:
         if not avd_manager:
             print_error_and_exit('avdmanager not found')
         cmd = '%s --verbose list avd' % avd_manager
-        return_code, stdout, stderr = self._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to execute avdmanager')
         print(stdout)
@@ -133,7 +134,7 @@ class AndroidEnhanced:
 
     def list_others(self):
         cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
-        return_code, stdout, stderr = self._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to list packages')
 
@@ -174,7 +175,7 @@ class AndroidEnhanced:
 
     def update_all(self):
         cmd = '%s --update' % self._get_sdk_manager_path()
-        return_code, stdout, stderr = self._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to update, return code: %d' % return_code)
         count = 0
@@ -194,7 +195,7 @@ class AndroidEnhanced:
         if api_type is None:
             api_type = 'google_apis'  # Preferred
         if arch is None:
-            if AndroidEnhanced._is_64bit_architecture():
+            if PlatformHelper.is_64bit_architecture():
                 arch = 'x86_64'
             else:
                 arch = 'x86'
@@ -205,7 +206,7 @@ class AndroidEnhanced:
         print_message('Creating AVD "%s" of type "%s" ' % (avd_name, package_name))
         create_cmd = 'echo no | %s --verbose create avd --name %s --package "%s"' % (
             self._get_avd_manager_path(), avd_name, package_name)
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(create_cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(create_cmd)
         if return_code != 0:
             print_error('Failed to create AVD')
             print_error('stdout: %s' % stdout)
@@ -241,7 +242,7 @@ class AndroidEnhanced:
 
     def _accept_all_licenses(self):
         cmd = 'yes | %s --licenses' % self._get_sdk_manager_path()
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to accept licenses, return code: %d' % return_code)
         license_regex = '([0-9]*) of ([0-9]*) SDK package licenses not accepted'
@@ -253,7 +254,7 @@ class AndroidEnhanced:
 
     @staticmethod
     def _get_default_java_version() -> Optional[str]:
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd('java -version')
+        return_code, stdout, stderr = PlatformHelper.execute_cmd('java -version')
         if return_code != 0:
             print_error('Failed to get java version')
             return None
@@ -267,13 +268,14 @@ class AndroidEnhanced:
 
     @staticmethod
     def _get_all_java_versions() -> [str]:
-        if AndroidEnhanced._on_linux():
-            return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
+        if PlatformHelper.on_linux():
+            return_code, stdout, stderr = PlatformHelper.execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_LINUX)
             java_version_regex = 'java-([0-9]+.*?)/'
-        elif AndroidEnhanced._on_mac():
+        elif PlatformHelper.on_mac():
             java_version_regex = r'"([0-9]+\.[0-9]+)\..*"'
-            return_code, stdout, stderr = AndroidEnhanced._execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
+            return_code, stdout, stderr = PlatformHelper.execute_cmd(_GET_ALL_JAVA_VERSIONS_ON_MAC)
         else:
+            print_error('Unsupported operating system')
             return []
 
         if return_code != 0:
@@ -289,7 +291,7 @@ class AndroidEnhanced:
     
     def _get_installed_packages(self) -> [str]:
         cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error('Failed to list packages')
             return None
@@ -332,7 +334,7 @@ class AndroidEnhanced:
         :return: List of build tools packages, sorted by version number, latest package comes last
         """
         cmd = '%s --verbose --list --include_obsolete' % self._get_sdk_manager_path()
-        return_code, stdout, stderr = AndroidEnhanced._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to list build tools, stdout: %s, stderr: %s' % (stdout, stderr))
         build_tools = re.findall(_BUILD_TOOLS_REGEX, stdout)
@@ -358,7 +360,7 @@ class AndroidEnhanced:
         # HAXM is not required on Linux. It is required on Windows and OSX.
         # I am assuming that this tool will never run on anything except Windows and OSX.
         # I don't know whether HAXM is required on BSD or not.
-        if not AndroidEnhanced._on_linux():
+        if not PlatformHelper.on_linux():
             packages_to_install.append('extras;intel;Hardware_Accelerated_Execution_Manager')
         return packages_to_install
 
@@ -421,7 +423,7 @@ class AndroidEnhanced:
         print_message('Installing packages [%s]...' % ', '.join(package_names))
         package_names_str = '\"' + '\" \"'.join(package_names) + '\"'
         cmd = 'yes | %s --verbose %s' % (self._get_sdk_manager_path(), package_names_str)
-        return_code, stdout, stderr = self._execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error('Failed to install packages \"%s\"' % ' '.join(package_names))
             print_error('Stderr is \n%s' % stderr)
@@ -429,122 +431,27 @@ class AndroidEnhanced:
         return True
 
     def _get_avd_manager_path(self) -> Optional[str]:
+        """
+        :return: path to avdmanager binary, caches the result for the future use.
+        """
         if not self._avd_manager:
-            self._avd_manager = AndroidEnhanced._get_avd_manager_path_uncached()
-            print_verbose('AVD manager is located at %s' % self._avd_manager)
+            self._avd_manager = AndroidSdkHelper.get_avd_manager_path_uncached()
+            print_verbose('avdmanager is located at %s' % self._avd_manager)
 
         # Return the cached value
         return self._avd_manager
 
-    @staticmethod
-    def _get_avd_manager_path_uncached() -> Optional[str]:
-        # Only works on Mac and GNU/Linux
-        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
-            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v avdmanager')
-            if return_code == 0:
-                return 'avdmanager'
-            else:
-                print_verbose('avdmanager not in path, checking for ANDROID_SDK_ROOT')
-
-        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
-        if not sdk_location:
-            print_error('Unable to find Android SDK')
-            return None
-
-        avd_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
-        if os.path.exists(avd_manager_path):
-            return avd_manager_path
-        else:
-            print_error_and_exit('avdmanager not found at \"%s\"' % avd_manager_path)
-            return None
-
     def _get_sdk_manager_path(self) -> Optional[str]:
+        """
+        :return: path to sdkmanager binary, caches the result for the future use.
+        """
         if not self._sdk_manager:
-            self._sdk_manager = AndroidEnhanced._get_sdk_manager_path_uncached()
-            print_verbose('SDK manager is located at %s' % self._sdk_manager)
+            self._sdk_manager = AndroidSdkHelper.get_sdk_manager_path_uncached()
+            print_verbose('sdkmanager is located at %s' % self._sdk_manager)
         # Return the cached value
         return self._sdk_manager
-
-    @staticmethod
-    def _get_sdk_manager_path_uncached() -> Optional[str]:
-        # Only works on Mac and GNU/Linux
-        if AndroidEnhanced._on_linux() or AndroidEnhanced._on_mac():
-            return_code, stdout, stderr = AndroidEnhanced._execute_cmd('command -v sdkmanager')
-            if return_code == 0:
-                return 'sdkmanager'
-            else:
-                print_verbose('sdkmanager not in path, checking for ANDROID_SDK_ROOT')
-
-        sdk_location = AndroidEnhanced._get_location_of_android_sdk()
-        if not sdk_location:
-            print_error('Unable to find Android SDK')
-            return None
-
-        sdk_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'sdkmanager')
-        if os.path.exists(sdk_manager_path):
-            return sdk_manager_path
-        else:
-            print_error_and_exit('sdkmanager not found at \"%s\"' % sdk_manager_path)
-            return None
-
-    @staticmethod
-    def _get_location_of_android_sdk() -> Optional[str]:
-        try:
-            return os.environ['ANDROID_SDK_ROOT']
-        except KeyError:
-            print_error_and_exit(
-                'Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
 
     # TODO(ashishb): Implement this in the future to check whether a package is available or not.
     #pylint: disable=W0613
     def _does_package_exist(self, package_name):
         return True
-
-    @staticmethod
-    def _execute_cmd(cmd) -> (int, str, str):
-        """
-        :param cmd: Command to be executed
-        :return: (returncode, stdout, stderr)
-        """
-        print_verbose('Executing command: %s' % cmd)
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        stdout = ''
-        stderr = ''
-
-        # Disabled for now, since we lose stdout data due to this indeterministically.
-        # while process.poll() is None:
-        #     line1 = process.stdout.readline()
-        #     line1 = line1.decode('utf-8').strip()
-        #     if line1:
-        #         stdout += (line1 + '\n')
-        #         print_verbose(line1)
-
-        leftover_stdout, leftover_stderr = process.communicate()
-        leftover_stdout = leftover_stdout.decode('utf-8').strip()
-        leftover_stderr = leftover_stderr.decode('utf-8').strip()
-        for line in leftover_stdout.split('\n'):
-            line = line.strip()
-            if line:
-                print_verbose(line)
-                stdout += (line + '\n')
-
-        for line in leftover_stderr.split('\n'):
-            line = line.strip()
-            if line:
-                stderr += (line + '\n')
-                print_verbose(line)
-
-        return process.returncode, stdout, stderr
-
-    @staticmethod
-    def _on_linux():
-        return platform.system() == 'Linux'
-
-    @staticmethod
-    def _on_mac():
-        return platform.system() == 'Darwin'
-
-    @staticmethod
-    def _is_64bit_architecture():
-        return platform.architecture()[0] == '64bit'

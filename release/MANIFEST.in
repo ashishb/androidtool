@@ -1,4 +1,6 @@
 include androide/main.py
 include androide/android_enhanced.py
+include androide/android_sdk_helper.py
 include androide/output_helper.py
+include androide/platform_helper.py
 include androide/version.txt
