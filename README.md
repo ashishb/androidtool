@@ -40,3 +40,85 @@ A better version of the command-line android tool with a more intuitive command-
     update all - updates all installed packages to the latest versions.
     create avd - creates a new AVD. It will install the package, if required. By default, Google API build with X86_64 (on 64-bit) and X86 on 32-bit will be created.
     start avd - Starts an existing AVD.
+
+
+### Usage example
+
+```
+$ androidtool doctor
+Checking java version...
+Correct Java version 1.8 is installed
+Checking SDK manager is installed...
+Checking that basic Android packages are installed...
+Package 1/8: "build-tools;28.0.3" is installed
+Package 2/8: "emulator" is installed
+Package 3/8: "tools" is installed
+Package 4/8: "platform-tools" is installed
+Package 5/8: "extras;android;m2repository" is installed
+Package 6/8: "extras;google;m2repository" is installed
+Package 7/8: "patcher;v4" is installed
+Package 8/8: "extras;intel;Hardware_Accelerated_Execution_Manager" is installed
+```
+
+```
+$ androidtool list build tools
+...
+build-tools;26.0.1
+build-tools;26.0.2
+build-tools;26.0.3
+build-tools;27.0.0
+build-tools;27.0.1
+build-tools;27.0.2
+build-tools;27.0.3
+build-tools;28.0.0
+build-tools;28.0.0-rc1
+build-tools;28.0.0-rc2
+build-tools;28.0.1
+build-tools;28.0.2
+build-tools;28.0.3
+```
+
+```
+$ androidtool list api versions --arm
+Google API type: default (Standard Android image; no Google API)
+armeabi-v7a -> 14, 14, 10, 14, 15, 16, 17, 18, 19, 21, 22, 24
+
+Google API type: google_apis
+armeabi-v7a -> 10, 15, 17, 18, 19, 21, 22, 23, 24, 25
+
+Google API type: android-tv
+armeabi-v7a -> 21, 23
+
+Google API type: android-wear
+armeabi-v7a -> 23, 25
+
+Google API type: android-wear-cn
+armeabi-v7a -> 25
+```
+
+```
+$ androidtool list api versions --x86 --google-apis
+Google API type: google_apis
+x86 -> 10, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28
+x86_64 -> 21, 22, 23, 24, 25, 26, 28
+```
+
+```
+$ androidtool list avds
+Available Android Virtual Devices:
+Name: test_avd1
+Path: /usr/local/Cellar/android-sdk/.android/avd/test_avd1.avd
+Target: Default Android System Image
+Based on: Android API 28 Tag/ABI: default/x86
+---------
+Name: test_avd2
+Path: /usr/local/Cellar/android-sdk/.android/avd/test_avd2.avd
+Target: Default Android System Image
+Based on: Android API 28 Tag/ABI: default/x86
+```
+
+```
+$ androidtool update all
+No packages to update
+All licenses accepted
+```
