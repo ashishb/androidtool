@@ -110,6 +110,9 @@ class AndroidEnhanced:
         return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
             print_error_and_exit('Failed to execute avdmanager')
+        start = stdout.find('Virtual Devices')
+        if start != -1:
+            stdout = stdout[start:]
         print(stdout)
 
     def install_api_version(self, version, arch=None, api_type=None) -> None:

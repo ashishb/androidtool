@@ -45,8 +45,8 @@ class PlatformHelper:
         for line in leftover_stderr.split('\n'):
             line = line.strip()
             if line:
-                stderr += (line + '\n')
                 print_verbose(line)
+                stderr += (line + '\n')
 
         return process.returncode, stdout, stderr
 
