@@ -33,11 +33,11 @@ SRC_FILES=$(echo -n ${DIR}/../src/{android_sdk_helper.py,main.py,output_helper.p
   git push origin master --tags &&
   # Send the package upstream
   python3 -m twine upload dist/* &&
-  echo "Few mins later, check https://pypi.org/project/android-sdk-enhanced/#history to confirm upload" &&
+  echo "Few mins later, check https://pypi.org/project/androidtool/#history to confirm upload" &&
   # Cleanup
   rm -r build/ dist/
 
 # To upload to test network and try:
 # rm -r build/ dist/ ; python3 setup.py sdist bdist_wheel && python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 # And then install it using
-# sudo pip3 install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/android-sdk-enhanced
+# sudo pip3 install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/androidtool

@@ -13,7 +13,7 @@ with open(_VERSION_FILE_PATH, 'r') as fh:
 with open(_README_FILE_PATH, 'r') as fh:
     long_description = fh.read()
 
-setup(name='android-sdk-enhanced',
+setup(name='androidtool',
         version=version,
         description='A better version of the command-line android SDK manager tool with a more intuitive interface.',
         long_description=long_description,

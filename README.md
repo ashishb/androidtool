@@ -1,11 +1,11 @@
-# Android SDK Enhanced [![Downloads](https://pepy.tech/badge/android-sdk-enhanced)](https://pepy.tech/project/android-sdk-enhanced) [![PyPI version](https://badge.fury.io/py/android-sdk-enhanced.svg)](https://badge.fury.io/py/android-sdk-enhanced) ![Python 3.6](https://img.shields.io/badge/python-3.6-brightgreen.svg) [![Build Status](https://img.shields.io/travis/ashishb/android-sdk-enhanced/master.svg?label=Travis%20CI)](https://travis-ci.org/ashishb/android-sdk-enhanced) [![CircleCI](https://img.shields.io/circleci/project/github/ashishb/android-sdk-enhanced.svg?label=Circle%20CI)](https://circleci.com/gh/ashishb/android-sdk-enhanced) 
+# Android SDK Enhanced [![Downloads](https://pepy.tech/badge/android-sdk-enhanced)](https://pepy.tech/project/android-sdk-enhanced) [![PyPI version](https://badge.fury.io/py/androidtool.svg)](https://badge.fury.io/py/androidtool) ![Python 3.6](https://img.shields.io/badge/python-3.6-brightgreen.svg) [![Build Status](https://img.shields.io/travis/ashishb/androidtool/master.svg?label=Travis%20CI)](https://travis-ci.org/ashishb/androidtool) [![CircleCI](https://img.shields.io/circleci/project/github/ashishb/android-sdk-enhanced.svg?label=Circle%20CI)](https://circleci.com/gh/ashishb/android-sdk-enhanced) 
 
 
 A better version of the command-line android SDK and AVD manager tools with a more intuitive interface
 
 ### Installation
 
-`pip3 install android-sdk-enhanced`
+`pip3 install androidtool`
 
 Note: Python 2 install is not supported
 
