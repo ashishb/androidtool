@@ -43,7 +43,6 @@ matrix:
         - python3 src/main.py list api versions --google-apis | grep google_apis
         - python3 src/main.py list api versions --arm --no-google-apis | grep default
 
-
     - name: Test list packages commands on JDK8
       language: android  # list testing
       python:
@@ -61,6 +60,28 @@ matrix:
         - python3 src/main.py list build tools
         - python3 src/main.py list installed packages
         - python3 src/main.py list other packages
+
+    - name: Test installation with list packages
+      language: android  # list testing
+      python:
+        - 3.7
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      jdk: oraclejdk8
+      before_script:
+        - sudo apt-get install python3-pip
+        - pip3 install --user -r requirements.txt
+        - jdk_switcher use oraclejdk8
+#        - sudo python3 -m pip install --upgrade pip
+        - cp -r -v src/* release/androide/
+        - cp README.md release/README.md
+        - sudo python3 -m pip install -e release
+      script:
+        - androidtool list api versions --arm
+        - androidtool list api versions --google-apis
+        - androidtool list api versions --arm --no-google-apis
+        - androidtool list build tools
+        - androidtool list installed packages
+        - androidtool list other packages
 
     # Install testing is slow, split it into multiple
     - name: Test install API 4 and API 14 on JDK8
