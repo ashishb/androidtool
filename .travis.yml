@@ -69,9 +69,7 @@ matrix:
       jdk: oraclejdk8
       before_script:
         - sudo apt-get install python3-pip
-        - pip3 install --user -r requirements.txt
         - jdk_switcher use oraclejdk8
-#        - sudo python3 -m pip install --upgrade pip
         - cp -r -v src/* release/androide/
         - cp README.md release/README.md
         - sudo python3 -m pip install -e release
@@ -82,6 +80,7 @@ matrix:
         - androidtool list build tools
         - androidtool list installed packages
         - androidtool list other packages
+        - androidtool install basic packages
 
     # Install testing is slow, split it into multiple
     - name: Test install API 4 and API 14 on JDK8
