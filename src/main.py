@@ -57,19 +57,9 @@ Sub-command description:
     update all - updates all installed packages to the latest versions.
     create avd - creates a new AVD. It will install the package, if required. By default, Google API build with X86_64 (on 64-bit) and X86 on 32-bit will be created.
     start avd - Starts an existing AVD.
-"""
-
-
-"""
-TODO
-
-Create AVD
-`avdmanager --verbose create avd --name test_avd1 --package 'system-images;android-28;google_apis_playstore;x86_64'`
-
-Start AVD
-`/usr/local/Caskroom/android-sdk/4333796/emulator/emulator -avd test_avd1 -no-boot-anim -no-skin -verbose`
-
-
+    
+androidtool relies on using ANDROID_SDK_ROOT environment variable to find the Android SDK or expects sdkamanger, 
+avdmanager, and emulator commands to be in the path.
 """
 
 
