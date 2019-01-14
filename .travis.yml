@@ -11,8 +11,7 @@ matrix:
     - name: Lint check code
       language: python
       sudo: false
-      python:
-        - 3.6
+      python: "3.6"
       install:
         - pip install -r requirements.txt
         - pip install pylint
@@ -20,9 +19,9 @@ matrix:
         - ./tests/lint_check_python3.sh
 
     - name: Test doctor against OpenJDK9
-      language: Java  # OpenJDK9 testing (Android language on Travis does not support JDK9)
-      python:
-        - 3.7
+      # OpenJDK9 testing (Android language on Travis does not support JDK9)
+      language: java
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk9
       before_script:
@@ -35,8 +34,7 @@ matrix:
 
     - name: Test doctor against JDK8
       language: android  # Doctor testing
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -52,8 +50,7 @@ matrix:
 
     - name: Test list packages commands on JDK8
       language: android  # list testing
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -70,8 +67,7 @@ matrix:
 
     - name: Test installation with list packages
       language: android  # list testing
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -92,8 +88,7 @@ matrix:
     # Install testing is slow, split it into multiple
     - name: Test install API 4 and API 14 on JDK8
       language: android
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -111,8 +106,7 @@ matrix:
 
     - name: Test install API 27 on JDK8
       language: android
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -125,8 +119,7 @@ matrix:
 
     - name: Test install API 28 on JDK8
       language: android
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       before_script:
@@ -156,8 +149,7 @@ matrix:
 
     - name: Test list avds command
       language: java
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       cache:
@@ -185,10 +177,9 @@ matrix:
         - export ANDROID_SDK_ROOT=$HOME/android-sdk
         - python3 src/main.py list avds --verbose
 
-    - name:  Test create and start AVD API 24 command on JDK8
+    - name: Test create and start AVD API 24 command on JDK8
       language: java
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       cache:
@@ -228,8 +219,7 @@ matrix:
 
     - name: Test create AVD API 28 command on JDK8
       language: java
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       cache:
@@ -264,18 +254,17 @@ matrix:
 
     - name: Test create AVD API 25 command on JDK8
       language: java
-      python:
-        - 3.7
+      python: "3.7"
       sudo: required  # For pip installation, otherwise, pip install fails.
       jdk: oraclejdk8
       cache:
         directories:
-        # Android SDK
-        - $HOME/android-sdk-dl
-        # Don't cache SDK since it slows down the test
-        # - $HOME/android-sdk
-        # Android build cache (see http://tools.android.com/tech-docs/build-cache)
-        - $HOME/.android/build-cache
+          # Android SDK
+          - $HOME/android-sdk-dl
+          # Don't cache SDK since it slows down the test
+          # - $HOME/android-sdk
+          # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+          - $HOME/.android/build-cache
       before_script:
         # Python
         - sudo apt-get install python3-pip
