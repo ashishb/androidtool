@@ -32,6 +32,7 @@ setup(name='androidtool',
           # -*- Extra requirements: -*-
           'docopt',
           'psutil',
+          'typing',
       ],
       entry_points={
           # -*- Entry points: -*-
