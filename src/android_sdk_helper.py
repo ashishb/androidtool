@@ -16,83 +16,47 @@ class AndroidSdkHelper:
 
     @staticmethod
     def get_avd_manager_path_uncached() -> Optional[str]:
-        # Only works on Mac and GNU/Linux
-        if PlatformHelper.on_linux() or PlatformHelper.on_mac():
-            return_code, stdout, stderr = PlatformHelper.execute_cmd('command -v avdmanager')
-            if return_code == 0:
-                return 'avdmanager'
-            else:
-                print_verbose('avdmanager not in path, checking for ANDROID_SDK_ROOT')
-
-        sdk_location = AndroidSdkHelper._get_location_of_android_sdk()
-        if not sdk_location:
-            print_error('Unable to find Android SDK')
-            return None
-
-        avd_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'avdmanager')
-        if os.path.exists(avd_manager_path):
-            return avd_manager_path
-        else:
-            print_error_and_exit('avdmanager not found at \"%s\"' % avd_manager_path)
-            return None
+        binary_name = 'avdmanager'
+        binary_paths = [os.path.join('tools', 'bin', 'avdmanager')]
+        return AndroidSdkHelper._get_binary(binary_name, binary_paths)
 
     @staticmethod
     def get_emulator_path_uncached() -> Optional[str]:
-        # Only works on Mac and GNU/Linux
-        if PlatformHelper.on_linux() or PlatformHelper.on_mac():
-            return_code, stdout, stderr = PlatformHelper.execute_cmd('command -v emulator')
-            if return_code == 0:
-                return 'emulator'
-            else:
-                print_verbose('emulator not in path, checking for ANDROID_SDK_ROOT')
-
-        sdk_location = AndroidSdkHelper._get_location_of_android_sdk()
-        if not sdk_location:
-            print_error('Unable to find Android SDK')
-            return None
-
-        # New SDK path
-        emulator_path = os.path.join(sdk_location, 'emulator', 'emulator')
-        if os.path.exists(emulator_path):
-            return emulator_path
-        else:
-            print_error('emulator not found at \"%s\", looking for an alternative...' % emulator_path)
-
-        # Old SDK path
-        emulator_path = os.path.join(sdk_location, 'tools', 'emulator')
-        if os.path.exists(emulator_path) and os.path.isfile(emulator_path):
-            return emulator_path
-        else:
-            print_error('emulator not found at \"%s\"' % emulator_path)
-
-        print_error_and_exit('emulator not found')
+        binary_name = 'emulator'
+        binary_paths = [
+            os.path.join('emulator', 'emulator'),  # New path
+            os.path.join('tools', 'emulator')  # Old path
+        ]
+        return AndroidSdkHelper._get_binary(binary_name, binary_paths)
 
     @staticmethod
     def get_sdk_manager_path_uncached() -> Optional[str]:
-        # Only works on Mac and GNU/Linux
-        if PlatformHelper.on_linux() or PlatformHelper.on_mac():
-            return_code, stdout, stderr = PlatformHelper.execute_cmd('command -v sdkmanager')
-            if return_code == 0:
-                return 'sdkmanager'
-            else:
-                print_verbose('sdkmanager not in path, checking for ANDROID_SDK_ROOT')
+        binary_name = 'sdkmanager'
+        binary_paths = [os.path.join('tools', 'bin', 'sdkmanager')]
+        return AndroidSdkHelper._get_binary(binary_name, binary_paths)
 
+    @staticmethod
+    def _get_binary(binary_name, binary_paths_relative_to_android_sdk) -> str:
         sdk_location = AndroidSdkHelper._get_location_of_android_sdk()
         if not sdk_location:
-            print_error('Unable to find Android SDK')
-            return None
-
-        sdk_manager_path = os.path.join(sdk_location, 'tools', 'bin', 'sdkmanager')
-        if os.path.exists(sdk_manager_path):
-            return sdk_manager_path
+            print_verbose('ANDROID_SDK_ROOT not defined')
         else:
-            print_error_and_exit('sdkmanager not found at \"%s\"' % sdk_manager_path)
-            return None
+            for relative_path in binary_paths_relative_to_android_sdk:
+                binary_path = os.path.join(sdk_location, relative_path)
+                if os.path.exists(binary_path):
+                    return binary_path
+                else:
+                    print_error('\"%s\" not found at \"%s\"' % (binary_name, binary_path))
+
+        # Only works on Mac and GNU/Linux
+        if PlatformHelper.on_linux() or PlatformHelper.on_mac():
+            return_code, stdout, stderr = PlatformHelper.execute_cmd('command -v %s' % binary_name)
+            if return_code == 0:
+                return binary_name
+            else:
+                print_error('\"%s\" not in path' % binary_name)
+        print_error_and_exit('Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
 
     @staticmethod
     def _get_location_of_android_sdk() -> Optional[str]:
-        try:
-            return os.environ['ANDROID_SDK_ROOT']
-        except KeyError:
-            print_error_and_exit(
-                'Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')
+        return os.environ.get('ANDROID_SDK_ROOT', None)
