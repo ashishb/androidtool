@@ -227,7 +227,9 @@ class AndroidEnhanced:
             cmd = '%s -verbose' % cmd.strip()
         return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
         if return_code != 0:
-            print_error_and_exit('Failed to start emulator, stdout: ' + stdout + ' stderr: ' + stderr)
+            print_error('Failed to start emulator\nstdout:\n' + stdout + '\n\nstderr:\n' + stderr)
+            print_message('List of valid virtual devices')
+            self.list_avds()
 
     @staticmethod
     def _ensure_correct_java_version():
