@@ -294,3 +294,38 @@ matrix:
         - python3 src/main.py list installed packages
         - python3 src/main.py list avds
         - python3 src/main.py list avds | grep test_avd3
+
+    - name: Test installation with list packages (OSX)
+      os: osx
+      language: android  # list testing
+      sudo: required  # For pip installation, otherwise, pip install fails.
+      # For JDK 8, https://docs.travis-ci.com/user/reference/osx/#jdk-and-macos
+      osx_image: xcode9.3
+      before_cache:
+        - brew cleanup
+      cache:
+        directories:
+          - $HOME/Library/Caches/Homebrew
+      before_script:
+        # - jdk_switcher use oraclejdk8
+        - cp -r -v src/* release/androide/
+        - cp README.md release/README.md
+        - brew upgrade python
+        # Fails with "python 2.7.14_2 is already installed"
+        # - brew install python3
+        - python3 --version
+        - virtualenv venv -p python3
+        - source venv/bin/activate
+        - sudo python3 -m pip install -e release
+        - brew cask install android-sdk
+      script:
+        - set -e
+        # Assert that this command failed
+        - androidtool doctor && false || true
+        - androidtool list api versions --arm
+        - androidtool list api versions --google-apis
+        - androidtool list api versions --arm --no-google-apis
+        - androidtool list build tools
+        - androidtool list installed packages
+        - androidtool list other packages
+        - androidtool install basic packages
