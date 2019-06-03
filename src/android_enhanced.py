@@ -1,3 +1,4 @@
+import os
 import re
 from typing import Optional
 
@@ -220,12 +221,12 @@ class AndroidEnhanced:
 
     def start_avd(self, avd_name, headless_mode, verbose_mode):
         # cmd = '%s -avd %s -no-boot-anim -no-skin' % (self._get_emulator_path(), avd_name)
-        cmd = '%s -avd %s -no-boot-anim' % (self._get_emulator_path(), avd_name)
+        cmd = '%s -avd %s -no-boot-anim' % ('./emulator', avd_name)
         if headless_mode:
             cmd = '%s -no-window' % cmd.strip()
         if verbose_mode:
             cmd = '%s -verbose' % cmd.strip()
-        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd)
+        return_code, stdout, stderr = PlatformHelper.execute_cmd(cmd, cwd=os.path.dirname(self._get_emulator_path()))
         if return_code != 0:
             print_error('Failed to start emulator\nstdout:\n' + stdout + '\n\nstderr:\n' + stderr)
             print_message('List of valid virtual devices')

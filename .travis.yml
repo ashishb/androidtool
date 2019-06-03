@@ -193,6 +193,7 @@ matrix:
       before_script:
         # Python
         - sudo apt-get install python3-pip
+        - sudo apt-get install android-tools-adb
         - pip3 install --user -r requirements.txt
         - jdk_switcher use oraclejdk8
         - touch $HOME/.android/repositories.cfg
@@ -215,7 +216,7 @@ matrix:
         # Only ARM version can be tested on Travis CI
         - python3 src/main.py start avd test_avd1 --headless --verbose &
         # Run for 60 seconds and then kill.
-        - sleep 60 && kill %1
+        - adb wait-for-device && kill %1
 
     - name: Test create AVD API 28 command on JDK8
       language: java

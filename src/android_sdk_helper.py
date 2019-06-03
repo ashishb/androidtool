@@ -44,6 +44,7 @@ class AndroidSdkHelper:
             for relative_path in binary_paths_relative_to_android_sdk:
                 binary_path = os.path.join(sdk_location, relative_path)
                 if os.path.exists(binary_path):
+                    print_error('\"%s\" found at \"%s\"' % (binary_name, binary_path))
                     return binary_path
                 else:
                     print_error('\"%s\" not found at \"%s\"' % (binary_name, binary_path))
@@ -52,7 +53,7 @@ class AndroidSdkHelper:
         if PlatformHelper.on_linux() or PlatformHelper.on_mac():
             return_code, stdout, stderr = PlatformHelper.execute_cmd('command -v %s' % binary_name)
             if return_code == 0:
-                return binary_name
+                return stdout.strip()
             else:
                 print_error('\"%s\" not in path' % binary_name)
         print_error_and_exit('Set ANDROID_SDK_ROOT environment variable to point to Android SDK root')

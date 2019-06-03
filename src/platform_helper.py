@@ -13,14 +13,18 @@ except ImportError:
 
 class PlatformHelper:
     @staticmethod
-    def execute_cmd(cmd) -> (int, str, str):
+    def execute_cmd(cmd, cwd=None) -> (int, str, str):
         """
         :param cmd: Command to be executed
+        :param cwd: working directory for the command
         :return: (returncode, stdout, stderr)
         """
-        print_verbose('Executing command: %s' % cmd)
+        if cwd:
+            print_verbose('Executing command: \"%s\" using working directory: \"%s\"' % (cmd, cwd))
+        else:
+            print_verbose('Executing command: \"%s\"' % cmd)
         process = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ.copy())
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ.copy(), cwd=cwd)
 
         stdout = ''
         stderr = ''
