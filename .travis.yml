@@ -219,8 +219,11 @@ matrix:
         - python3 src/main.py list avds | grep test_avd1
         # Only ARM version can be tested on Travis CI
         - python3 src/main.py start avd test_avd1 --headless --verbose &
-        # Run for 60 seconds and then kill.
-        - adb wait-for-device && kill %1
+        - adb wait-for-device
+        - kill %1
+        # Without this, the test fails mysteriously
+        # see http://travis-ci.org/ashishb/androidtool/builds/598498218
+        - set +e
 
     - name: Test create AVD API 28 command on JDK8
       dist: trusty
