@@ -313,7 +313,9 @@ matrix:
         # - jdk_switcher use oraclejdk8
         - cp -r -v src/* release/androide/
         - cp README.md release/README.md
-        - brew upgrade python
+        # this seems to be failing due to some bug in Homebrew
+        # https://travis-ci.org/ashishb/androidtool/jobs/625531290
+        - brew upgrade python || true
         # Fails with "python 2.7.14_2 is already installed"
         # - brew install python3
         - python3 --version
