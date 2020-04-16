@@ -45,10 +45,14 @@ class AndroidEnhanced:
     def _ensure_basic_packages_are_installed(self) -> bool:
         success = True
         installed_packages = self._get_installed_packages()
+        print_verbose('Installed packages are %s' % installed_packages)
         basic_packages = self._get_basic_packages()
         num_packages = len(basic_packages)
         for i in range(0, num_packages):
             basic_package = basic_packages[i]
+            if basic_package == 'tools':
+                print_message('Skipping over obsolete package \"%s\"' % basic_package)
+                continue
             if basic_package not in installed_packages:
                 print_error('Basic packages \"%s\" is not installed' % basic_package)
                 success = False
@@ -345,6 +349,8 @@ class AndroidEnhanced:
                 continue
             if line.startswith('Installed Obsolete Packages:'):
                 continue
+            if line.find('|') > 0:
+                line = line[:line.find('|')]
             installed_packages.add(line)
         return sorted(installed_packages)
 
