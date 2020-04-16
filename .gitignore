@@ -105,6 +105,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+.idea/
+
 
 release/README.md
 release/androide/main.py
